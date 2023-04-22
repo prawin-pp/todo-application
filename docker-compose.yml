@@ -12,3 +12,24 @@ services:
     environment:
       APP_ENV: local
       TZ: Asia/Bangkok
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    name: development
