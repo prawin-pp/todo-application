@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS todo_tasks (
     id UUID PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name TEXT NOT NULL,
+    name TEXT,
     description TEXT,
     completed BOOLEAN DEFAULT FALSE,
     due_date DATE,
