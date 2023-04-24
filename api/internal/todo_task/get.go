@@ -11,7 +11,11 @@ func (s *Server) HandleGetTasks(w http.ResponseWriter, r bunrouter.Request) erro
 	uid := internal.GetUserIDFromContext(r.Context())
 	todoID := r.Param("todoId")
 
-	tasks, _ := s.db.GetAll(uid, todoID)
+	tasks, err := s.db.GetAll(uid, todoID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil
+	}
 
 	return bunrouter.JSON(w, tasks)
 }

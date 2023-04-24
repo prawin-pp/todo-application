@@ -2,6 +2,7 @@ package todotask
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -107,5 +108,14 @@ func TestGetTodoTasks(t *testing.T) {
 		require.Equal(t, "MOCK_TASK_NAME", tasks[0].Name)
 		require.Equal(t, userID, tasks[0].UserID)
 		require.Equal(t, todoID, tasks[0].TodoID)
+	})
+
+	t.Run("should return http error with status = 500 when called db with error", func(t *testing.T) {
+		testCtx := newTestGetTasksContext(t)
+		testCtx.db.ReturnError = errors.New("MOCK_DB_ERROR")
+
+		res := testCtx.requestWithUserID(userID, todoID)
+
+		require.Equal(t, 500, res.Result().StatusCode)
 	})
 }
