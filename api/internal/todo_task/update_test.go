@@ -139,4 +139,28 @@ func TestPartialUpdateTask(t *testing.T) {
 		require.Equal(t, 400, res.Result().StatusCode)
 	})
 
+	t.Run("should return response body with updated task", func(t *testing.T) {
+		testCtx := newTestPartialUpdateTaskContext(t)
+		testCtx.db.CreateTask(model.TodoTask{
+			ID:          taskID,
+			UserID:      userID,
+			TodoID:      todoID,
+			Name:        "NAME",
+			Description: "DESC",
+			Completed:   false,
+			DueDate:     "2023-01-01",
+		})
+
+		res := testCtx.sendRequest(userID, todoID, taskID, reqBody)
+
+		var resBody model.TodoTask
+		err := json.NewDecoder(res.Body).Decode(&resBody)
+
+		require.NoError(t, err)
+		require.Equal(t, reqBody.Name, resBody.Name)
+		require.Equal(t, reqBody.Description, resBody.Description)
+		require.Equal(t, reqBody.Completed, resBody.Completed)
+		require.Equal(t, reqBody.DueDate, resBody.DueDate)
+	})
+
 }

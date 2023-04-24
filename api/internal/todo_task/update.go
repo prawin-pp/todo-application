@@ -19,7 +19,7 @@ func (s *Server) HandlePartialUpdateTask(w http.ResponseWriter, r bunrouter.Requ
 		return nil
 	}
 
-	s.db.PartialUpdate(userID, todoID, taskID, body)
+	updatedTask, _ := s.db.PartialUpdate(userID, todoID, taskID, body)
 
-	return nil
+	return bunrouter.JSON(w, updatedTask)
 }
