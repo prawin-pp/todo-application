@@ -18,12 +18,14 @@ type mockCreateTaskDatabase struct {
 	Database
 
 	NumberOfCalled int
-	CallWithParams [][]string
+	CallWithParams [][]interface{}
 	ReturnTasks    []model.TodoTask
 	ReturnError    error
 }
 
 func (m *mockCreateTaskDatabase) Create(userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error) {
+	m.NumberOfCalled++
+	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, req})
 	return nil, nil
 }
 
@@ -35,6 +37,8 @@ type testCreateTaskContext struct {
 }
 
 func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, body CreateTodoTaskRequest) *httptest.ResponseRecorder {
+	testContext.withUserID = userID.String()
+
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(body)
 	require.NoError(testContext.t, err)
@@ -45,7 +49,6 @@ func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, 
 	err = testContext.router.ServeHTTPError(w, req)
 	require.NoError(testContext.t, err)
 
-	testContext.withUserID = userID.String()
 	return w
 }
 
@@ -64,12 +67,12 @@ func newTestCreateTaskContext(t *testing.T) *testCreateTaskContext {
 
 func TestCreateTask(t *testing.T) {
 	userID := uuid.New()
-	taskID := uuid.New()
+	todoID := uuid.New()
 
 	t.Run("should return http status 201 when called", func(t *testing.T) {
 		testCtx := newTestCreateTaskContext(t)
 
-		res := testCtx.sendRequest(userID, taskID, CreateTodoTaskRequest{
+		res := testCtx.sendRequest(userID, todoID, CreateTodoTaskRequest{
 			Name:        "MOCK_TASK_NAME",
 			Description: "",
 			Completed:   false,
@@ -77,5 +80,24 @@ func TestCreateTask(t *testing.T) {
 		})
 
 		require.Equal(t, 201, res.Result().StatusCode)
+	})
+
+	t.Run("should call create task to database when called", func(t *testing.T) {
+		testCtx := newTestCreateTaskContext(t)
+		body := CreateTodoTaskRequest{
+			Name:        "MOCK_TASK_NAME",
+			Description: "",
+			Completed:   false,
+			DueDate:     "2023-01-01",
+		}
+
+		testCtx.sendRequest(userID, todoID, body)
+
+		require.Equal(t, 1, testCtx.db.NumberOfCalled)
+		require.Equal(t, []interface{}{
+			userID.String(),
+			todoID.String(),
+			body,
+		}, testCtx.db.CallWithParams[0])
 	})
 }
