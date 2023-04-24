@@ -6,6 +6,7 @@ import (
 	"github.com/uptrace/bunrouter"
 )
 
-func (s *Server) HandleGetTodo(w http.ResponseWriter, r bunrouter.Request) error {
+func (s *Server) HandleGetTodos(w http.ResponseWriter, r bunrouter.Request) error {
+	s.db.GetAll("")
 	return nil
 }

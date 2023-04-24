@@ -1,7 +1,15 @@
 package todo
 
-type Server struct{}
+import "github.com/parwin-pp/todo-application/internal/model"
 
-func NewServer() *Server {
-	return &Server{}
+type Server struct {
+	db Database
+}
+
+type Database interface {
+	GetAll(userID string) ([]model.Todo, error)
+}
+
+func NewServer(db Database) *Server {
+	return &Server{db: db}
 }
