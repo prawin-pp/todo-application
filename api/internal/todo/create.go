@@ -10,16 +10,15 @@ import (
 )
 
 func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) error {
-	var body model.Todo
+	userID := internal.GetUserIDFromContext(r.Context())
 
+	var body model.Todo
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return nil
 	}
 
-	uid := internal.GetUserIDFromContext(r.Context())
-
-	todo, err := s.db.Create(uid, body.Name)
+	todo, err := s.db.Create(r.Context(), userID, body.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil

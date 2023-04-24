@@ -19,7 +19,7 @@ func (s *Server) HandlePartialUpdateTask(w http.ResponseWriter, r bunrouter.Requ
 		return nil
 	}
 
-	updatedTask, err := s.db.PartialUpdate(userID, todoID, taskID, body)
+	updatedTask, err := s.db.PartialUpdate(r.Context(), userID, todoID, taskID, body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil

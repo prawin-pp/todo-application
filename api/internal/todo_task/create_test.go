@@ -2,6 +2,7 @@ package todotask
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,7 +25,7 @@ type mockCreateTaskDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockCreateTaskDatabase) Create(userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockCreateTaskDatabase) Create(ctx context.Context, userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, req})
 	return &model.TodoTask{

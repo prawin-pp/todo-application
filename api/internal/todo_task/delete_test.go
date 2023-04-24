@@ -1,6 +1,7 @@
 package todotask
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,7 +21,7 @@ type mockDeleteTaskDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockDeleteTaskDatabase) Delete(userID, todoID, taskID string) error {
+func (m *mockDeleteTaskDatabase) Delete(ctx context.Context, userID, todoID, taskID string) error {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID})
 	return m.ReturnError

@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -23,7 +24,7 @@ type mockGetTodosDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockGetTodosDatabase) GetAll(userID string) ([]model.Todo, error) {
+func (m *mockGetTodosDatabase) GetAll(ctx context.Context, userID string) ([]model.Todo, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, userID)
 	return m.ReturnTodos, m.ReturnError

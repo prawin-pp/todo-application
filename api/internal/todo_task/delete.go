@@ -12,7 +12,7 @@ func (s *Server) HandleDeleteTask(w http.ResponseWriter, r bunrouter.Request) er
 	todoID := r.Param("todoId")
 	taskID := r.Param("taskId")
 
-	if err := s.db.Delete(userID, todoID, taskID); err != nil {
+	if err := s.db.Delete(r.Context(), userID, todoID, taskID); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil
 	}

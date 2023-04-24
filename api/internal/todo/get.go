@@ -8,9 +8,9 @@ import (
 )
 
 func (s *Server) HandleGetTodos(w http.ResponseWriter, r bunrouter.Request) error {
-	uid := internal.GetUserIDFromContext(r.Context())
+	userID := internal.GetUserIDFromContext(r.Context())
 
-	todos, err := s.db.GetAll(uid)
+	todos, err := s.db.GetAll(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil

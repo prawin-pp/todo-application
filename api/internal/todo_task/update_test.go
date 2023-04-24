@@ -2,6 +2,7 @@ package todotask
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,7 +29,7 @@ func (m *mockPartialUpdateTask) CreateTask(task model.TodoTask) {
 	m.ExistsTasks = append(m.ExistsTasks, task)
 }
 
-func (m *mockPartialUpdateTask) PartialUpdate(userID, todoID, taskID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockPartialUpdateTask) PartialUpdate(ctx context.Context, userID, todoID, taskID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID, req})
 
