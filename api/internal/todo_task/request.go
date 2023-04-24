@@ -7,4 +7,9 @@ type CreateTodoTaskRequest struct {
 	DueDate     string `json:"dueDate"`
 }
 
-type UpdateTodoTaskRequest struct{}
+type PartialUpdateTodoTaskRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
+	DueDate     string `json:"dueDate"`
+}

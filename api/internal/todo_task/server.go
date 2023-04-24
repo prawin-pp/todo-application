@@ -9,7 +9,7 @@ type Server struct {
 type Database interface {
 	GetAll(userID, todoID string) ([]model.TodoTask, error)
 	Create(userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error)
-	Update(userID, todoID string, req UpdateTodoTaskRequest) (*model.TodoTask, error)
+	PartialUpdate(userID, todoID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error)
 	Delete(userID, todoID, taskID string) error
 }
 
