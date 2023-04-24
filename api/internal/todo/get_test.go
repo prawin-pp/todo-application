@@ -19,13 +19,26 @@ func TestGetTodos(t *testing.T) {
 		require.Equal(t, 200, res.Result().StatusCode)
 	})
 
-	t.Run("should call get todos from database when called", func(t *testing.T) {
+	t.Run("should call get todos from database with userID given userID = 'd923a2c7-e013-4668-ba05-da59dfaab667'", func(t *testing.T) {
 		testCtx := newTestGetTodosContext(t)
+		testCtx.WithUserID(uuid.MustParse("d923a2c7-e013-4668-ba05-da59dfaab667"))
 		testCtx.createTodo(userID, "MOCK_TODO")
 
 		res := testCtx.sendRequest()
 
 		require.Equal(t, 200, res.Result().StatusCode)
 		require.Equal(t, 1, testCtx.db.NumberOfCalled)
+		require.Equal(t, []string{"d923a2c7-e013-4668-ba05-da59dfaab667"}, testCtx.db.CallWithParams)
+	})
+
+	t.Run("should call get todos from database with userID given userID = '054ae3b4-42db-4568-a5df-99a62cb1b001'", func(t *testing.T) {
+		testCtx := newTestGetTodosContext(t)
+		testCtx.WithUserID(uuid.MustParse("054ae3b4-42db-4568-a5df-99a62cb1b001"))
+		testCtx.createTodo(userID, "MOCK_TODO")
+
+		res := testCtx.sendRequest()
+
+		require.Equal(t, 200, res.Result().StatusCode)
+		require.Equal(t, []string{"054ae3b4-42db-4568-a5df-99a62cb1b001"}, testCtx.db.CallWithParams)
 	})
 }
