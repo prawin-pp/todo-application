@@ -8,6 +8,7 @@ type Server struct {
 
 type Database interface {
 	GetAll(userID string) ([]model.Todo, error)
+	Create(userID, name string) (*model.Todo, error)
 }
 
 func NewServer(db Database) *Server {
