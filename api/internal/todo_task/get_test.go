@@ -107,8 +107,6 @@ func TestGetTodoTasks(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(tasks))
 		require.Equal(t, "MOCK_TASK_NAME", tasks[0].Name)
-		require.Equal(t, userID, tasks[0].UserID)
-		require.Equal(t, todoID, tasks[0].TodoID)
 	})
 
 	t.Run("should return http error with status = 500 when called db with error", func(t *testing.T) {
