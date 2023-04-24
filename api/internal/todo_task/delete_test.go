@@ -28,7 +28,7 @@ func (m *mockDeleteTaskDatabase) Delete(userID, todoID, taskID string) error {
 type testDeleteTaskContext struct {
 	t          *testing.T
 	router     *bunrouter.Router
-	db         *mockCreateTaskDatabase
+	db         *mockDeleteTaskDatabase
 	withUserID string
 }
 
@@ -49,7 +49,7 @@ func newTestDeleteTaskContext(t *testing.T) *testDeleteTaskContext {
 	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
 		return testCtx.withUserID
 	})))
-	testCtx.db = &mockCreateTaskDatabase{}
+	testCtx.db = &mockDeleteTaskDatabase{}
 
 	server := NewServer(testCtx.db)
 	testCtx.router.DELETE("/todos/:todoId/tasks/:taskId", server.HandleDeleteTask)
@@ -68,5 +68,18 @@ func TestHandleDeleteTask(t *testing.T) {
 		res := testCtx.sendRequest(userID, todoID, taskID)
 
 		require.Equal(t, http.StatusNoContent, res.Code)
+	})
+
+	t.Run("should call delete task to database with correct params", func(t *testing.T) {
+		testCtx := newTestDeleteTaskContext(t)
+
+		testCtx.sendRequest(userID, todoID, taskID)
+
+		require.Equal(t, 1, testCtx.db.NumberOfCalled)
+		require.Equal(t, []interface{}{
+			userID.String(),
+			todoID.String(),
+			taskID.String(),
+		}, testCtx.db.CallWithParams[0])
 	})
 }
