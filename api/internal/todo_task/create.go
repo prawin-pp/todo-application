@@ -18,8 +18,8 @@ func (s *Server) HandleCreateTask(w http.ResponseWriter, r bunrouter.Request) er
 		return nil
 	}
 
-	s.db.Create(userID, todoID, body)
+	task, _ := s.db.Create(userID, todoID, body)
 
 	w.WriteHeader(http.StatusCreated)
-	return nil
+	return bunrouter.JSON(w, task)
 }

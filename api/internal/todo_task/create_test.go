@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/parwin-pp/todo-application/internal/model"
@@ -19,14 +20,24 @@ type mockCreateTaskDatabase struct {
 
 	NumberOfCalled int
 	CallWithParams [][]interface{}
-	ReturnTasks    []model.TodoTask
 	ReturnError    error
 }
 
 func (m *mockCreateTaskDatabase) Create(userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, req})
-	return nil, nil
+	return &model.TodoTask{
+		ID:          uuid.New(),
+		UserID:      uuid.MustParse(userID),
+		TodoID:      uuid.MustParse(todoID),
+		Name:        req.Name,
+		Description: req.Description,
+		Completed:   req.Completed,
+		DueDate:     req.DueDate,
+		SortOrder:   0,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, m.ReturnError
 }
 
 type testCreateTaskContext struct {
@@ -119,5 +130,27 @@ func TestCreateTask(t *testing.T) {
 		res := testCtx.sendRequestString(userID, todoID, `{#}`)
 
 		require.Equal(t, 400, res.Result().StatusCode)
+	})
+
+	t.Run("should return response body with created task from database", func(t *testing.T) {
+		testCtx := newTestCreateTaskContext(t)
+		body := CreateTodoTaskRequest{
+			Name:        "MOCK_TASK_NAME",
+			Description: "",
+			Completed:   false,
+			DueDate:     "2023-01-01",
+		}
+
+		res := testCtx.sendRequest(userID, todoID, body)
+
+		require.Equal(t, 201, res.Result().StatusCode)
+
+		var resBody model.TodoTask
+		err := json.NewDecoder(res.Body).Decode(&resBody)
+		require.NoError(t, err)
+		require.Equal(t, "MOCK_TASK_NAME", resBody.Name)
+		require.Equal(t, "", resBody.Description)
+		require.Equal(t, false, resBody.Completed)
+		require.Equal(t, "2023-01-01", resBody.DueDate)
 	})
 }
