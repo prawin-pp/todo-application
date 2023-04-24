@@ -23,6 +23,15 @@ func TestCreateTodo(t *testing.T) {
 
 		require.Equal(t, 201, resp.Result().StatusCode)
 	})
+
+	t.Run("should return http status 400 when request body is not json", func(t *testing.T) {
+		testCtx := newTestCreateTodoContext(t)
+		req := []byte(`{ #: ## }`)
+
+		resp := testCtx.requestWithUserID(userID, bytes.NewReader(req))
+
+		require.Equal(t, 400, resp.Result().StatusCode)
+	})
 }
 
 type testCreateTodoContext struct {
