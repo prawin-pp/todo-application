@@ -73,11 +73,11 @@ func (testContext *testPartialUpdateTaskContext) sendRequest(userID, todoID, tas
 	return w
 }
 
-func (testContext *testPartialUpdateTaskContext) sendRequestString(userID, todoID uuid.UUID, body string) *httptest.ResponseRecorder {
+func (testContext *testPartialUpdateTaskContext) sendRequestString(userID, todoID, taskID uuid.UUID, body string) *httptest.ResponseRecorder {
 	testContext.withUserID = userID.String()
 
 	w := httptest.NewRecorder()
-	path := fmt.Sprintf("/todos/%s", todoID)
+	path := fmt.Sprintf("/todos/%s/tasks/%s", todoID, taskID)
 	req := httptest.NewRequest(http.MethodPatch, path, bytes.NewReader([]byte(body)))
 	err := testContext.router.ServeHTTPError(w, req)
 	require.NoError(testContext.t, err)
@@ -129,6 +129,14 @@ func TestPartialUpdateTask(t *testing.T) {
 			taskID.String(),
 			reqBody,
 		}, testCtx.db.CallWithParams[0])
+	})
+
+	t.Run("should return status 400 when request is invalid json format", func(t *testing.T) {
+		testCtx := newTestPartialUpdateTaskContext(t)
+
+		res := testCtx.sendRequestString(userID, todoID, taskID, `{ #:## }`)
+
+		require.Equal(t, 400, res.Result().StatusCode)
 	})
 
 }

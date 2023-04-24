@@ -14,7 +14,10 @@ func (s *Server) HandlePartialUpdateTask(w http.ResponseWriter, r bunrouter.Requ
 	taskID := r.Param("taskId")
 
 	var body PartialUpdateTodoTaskRequest
-	json.NewDecoder(r.Body).Decode(&body)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
 
 	s.db.PartialUpdate(userID, todoID, taskID, body)
 
