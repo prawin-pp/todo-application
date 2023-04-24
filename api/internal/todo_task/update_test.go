@@ -19,11 +19,35 @@ type mockPartialUpdateTask struct {
 
 	NumberOfCalled int
 	CallWithParams [][]interface{}
+	ExistsTasks    []model.TodoTask
 	ReturnError    error
 }
 
-func (m *mockPartialUpdateTask) PartialUpdate(userID, todoID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
-	return nil, nil
+func (m *mockPartialUpdateTask) CreateTask(task model.TodoTask) {
+	m.ExistsTasks = append(m.ExistsTasks, task)
+}
+
+func (m *mockPartialUpdateTask) PartialUpdate(userID, todoID, taskID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
+	m.NumberOfCalled++
+	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID, req})
+
+	var result *model.TodoTask
+	for _, existsTask := range m.ExistsTasks {
+		isUserIDMatch := existsTask.UserID.String() == userID
+		isTodoIDMatch := existsTask.TodoID.String() == todoID
+		isTaskIDMatch := existsTask.ID.String() == taskID
+		if isUserIDMatch && isTodoIDMatch && isTaskIDMatch {
+			result = &existsTask
+		}
+	}
+	if result == nil {
+		return nil, m.ReturnError
+	}
+	result.Name = req.Name
+	result.Description = req.Description
+	result.Completed = req.Completed
+	result.DueDate = req.DueDate
+	return result, m.ReturnError
 }
 
 type testPartialUpdateTaskContext struct {
@@ -78,18 +102,33 @@ func TestPartialUpdateTask(t *testing.T) {
 	userID := uuid.New()
 	todoID := uuid.New()
 	taskID := uuid.New()
+	reqBody := PartialUpdateTodoTaskRequest{
+		Name:        "MOCK_TASK_NAME",
+		Description: "MOCK_DESCRIPTION",
+		Completed:   true,
+		DueDate:     "2023-01-01",
+	}
 
 	t.Run("should return http status 200 when called", func(t *testing.T) {
 		testCtx := newTestPartialUpdateTaskContext(t)
 
-		res := testCtx.sendRequest(userID, todoID, taskID, PartialUpdateTodoTaskRequest{
-			Name:        "MOCK_TASK_NAME",
-			Description: "MOCK_DESCRIPTION",
-			Completed:   true,
-			DueDate:     "2023-01-01",
-		})
+		res := testCtx.sendRequest(userID, todoID, taskID, reqBody)
 
 		require.Equal(t, 200, res.Result().StatusCode)
+	})
+
+	t.Run("should call partial update to database when called with given params", func(t *testing.T) {
+		testCtx := newTestPartialUpdateTaskContext(t)
+
+		testCtx.sendRequest(userID, todoID, taskID, reqBody)
+
+		require.Equal(t, 1, testCtx.db.NumberOfCalled)
+		require.Equal(t, []interface{}{
+			userID.String(),
+			todoID.String(),
+			taskID.String(),
+			reqBody,
+		}, testCtx.db.CallWithParams[0])
 	})
 
 }
