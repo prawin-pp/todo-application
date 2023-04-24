@@ -3,6 +3,7 @@ package todo
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -45,6 +46,10 @@ type testCreateTodoContext struct {
 	db     *mockCreateTodoDatabase
 
 	withUserID string
+}
+
+func (testContext *testCreateTodoContext) withCreateTodoError(err error) {
+	testContext.db.ReturnError = err
 }
 
 func (testContext *testCreateTodoContext) requestWithUserID(userID uuid.UUID, body io.Reader) *httptest.ResponseRecorder {
@@ -112,5 +117,15 @@ func TestCreateTodo(t *testing.T) {
 		err := json.NewDecoder(res.Body).Decode(&todo)
 		require.NoError(t, err)
 		require.Equal(t, "MOCK_NAME", todo.Name)
+	})
+
+	t.Run("should return http error with status = 500 when called db with error", func(t *testing.T) {
+		testCtx := newTestCreateTodoContext(t)
+		testCtx.withCreateTodoError(errors.New("SOMETHING_WENT_WRONG"))
+		req := []byte(`{ "name": "MOCK_NAME" }`)
+
+		res := testCtx.requestWithUserID(userID, bytes.NewReader(req))
+
+		require.Equal(t, 500, res.Result().StatusCode)
 	})
 }

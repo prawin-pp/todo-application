@@ -19,7 +19,11 @@ func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) er
 
 	uid := internal.GetUserIDFromContext(r.Context())
 
-	todo, _ := s.db.Create(uid, body.Name)
+	todo, err := s.db.Create(uid, body.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return nil
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	return bunrouter.JSON(w, todo)
