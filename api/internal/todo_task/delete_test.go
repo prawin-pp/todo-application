@@ -1,6 +1,7 @@
 package todotask
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -81,5 +82,14 @@ func TestHandleDeleteTask(t *testing.T) {
 			todoID.String(),
 			taskID.String(),
 		}, testCtx.db.CallWithParams[0])
+	})
+
+	t.Run("should return http status 500 when database return error", func(t *testing.T) {
+		testCtx := newTestDeleteTaskContext(t)
+		testCtx.db.ReturnError = errors.New("MOCK_ERROR")
+
+		res := testCtx.sendRequest(userID, todoID, taskID)
+
+		require.Equal(t, http.StatusInternalServerError, res.Code)
 	})
 }
