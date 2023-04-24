@@ -1,7 +1,15 @@
 package internal
 
-import "context"
+import (
+	"context"
+
+	"github.com/parwin-pp/todo-application/internal/auth"
+)
 
 func GetUserIDFromContext(ctx context.Context) string {
-	return "MOCK_USER_ID"
+	key := ctx.Value(auth.AuthContextKey{})
+
+	uid, _ := key.(string)
+
+	return uid
 }

@@ -18,4 +18,13 @@ func TestGetUserIDFromContext(t *testing.T) {
 		require.Equal(t, "MOCK_USER_ID", userID)
 	})
 
+	t.Run("should return user id = 'MOCK_SOMETHING'", func(t *testing.T) {
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, auth.AuthContextKey{}, "MOCK_SOMETHING")
+
+		userID := GetUserIDFromContext(ctx)
+
+		require.Equal(t, "MOCK_SOMETHING", userID)
+	})
+
 }
