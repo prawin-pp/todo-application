@@ -21,18 +21,6 @@ type testGetTodosContext struct {
 	withUserID string
 }
 
-func (testContext *testGetTodosContext) authMiddleware(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
-	return func(w http.ResponseWriter, req bunrouter.Request) error {
-		ctx := req.Context()
-		ctx = context.WithValue(ctx, auth.AuthContextKey{}, testContext.withUserID)
-		return next(w, req.WithContext(ctx))
-	}
-}
-
-func (testContext *testGetTodosContext) WithUserID(userID uuid.UUID) {
-	testContext.withUserID = userID.String()
-}
-
 func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string) *model.Todo {
 	todo := model.Todo{
 		ID:        uuid.New(),
@@ -45,11 +33,13 @@ func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string
 	return &todo
 }
 
-func (testContext *testGetTodosContext) WithGetTodosError(err error) {
+func (testContext *testGetTodosContext) withGetTodosError(err error) {
 	testContext.db.ReturnError = err
 }
 
-func (testContext *testGetTodosContext) sendRequest() *httptest.ResponseRecorder {
+func (testContext *testGetTodosContext) requestWithUserID(userID uuid.UUID) *httptest.ResponseRecorder {
+	testContext.withUserID = userID.String()
+
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/todos", nil)
 
@@ -61,10 +51,12 @@ func (testContext *testGetTodosContext) sendRequest() *httptest.ResponseRecorder
 
 func newTestGetTodosContext(t *testing.T) *testGetTodosContext {
 	testCtx := &testGetTodosContext{t: t}
-	testCtx.router = bunrouter.New(bunrouter.Use(testCtx.authMiddleware))
+	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
+		return testCtx.withUserID
+	})))
 	testCtx.db = &mockTodoDatabase{}
-	server := NewServer(testCtx.db)
 
+	server := NewServer(testCtx.db)
 	testCtx.router.GET("/todos", server.HandleGetTodos)
 
 	return testCtx
@@ -81,4 +73,14 @@ func (m *mockTodoDatabase) GetAll(userID string) ([]model.Todo, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, userID)
 	return m.ExistsTodos, m.ReturnError
+}
+
+func mockAuthMiddleware(getUserID func() string) bunrouter.MiddlewareFunc {
+	return func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
+		return func(w http.ResponseWriter, req bunrouter.Request) error {
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, auth.AuthContextKey{}, getUserID())
+			return next(w, req.WithContext(ctx))
+		}
+	}
 }
