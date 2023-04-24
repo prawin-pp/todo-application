@@ -52,6 +52,18 @@ func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, 
 	return w
 }
 
+func (testContext *testCreateTaskContext) sendRequestString(userID, todoID uuid.UUID, body string) *httptest.ResponseRecorder {
+	testContext.withUserID = userID.String()
+
+	w := httptest.NewRecorder()
+	path := fmt.Sprintf("/todos/%s", todoID)
+	req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte(body)))
+	err := testContext.router.ServeHTTPError(w, req)
+	require.NoError(testContext.t, err)
+
+	return w
+}
+
 func newTestCreateTaskContext(t *testing.T) *testCreateTaskContext {
 	testCtx := &testCreateTaskContext{t: t}
 	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
@@ -99,5 +111,13 @@ func TestCreateTask(t *testing.T) {
 			todoID.String(),
 			body,
 		}, testCtx.db.CallWithParams[0])
+	})
+
+	t.Run("should return http status = 400 when request body is invalid json format", func(t *testing.T) {
+		testCtx := newTestCreateTaskContext(t)
+
+		res := testCtx.sendRequestString(userID, todoID, `{#}`)
+
+		require.Equal(t, 400, res.Result().StatusCode)
 	})
 }

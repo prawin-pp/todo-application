@@ -13,7 +13,10 @@ func (s *Server) HandleCreateTask(w http.ResponseWriter, r bunrouter.Request) er
 	todoID := r.Param("todoId")
 
 	var body CreateTodoTaskRequest
-	json.NewDecoder(r.Body).Decode(&body)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return nil
+	}
 
 	s.db.Create(userID, todoID, body)
 
