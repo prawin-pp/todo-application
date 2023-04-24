@@ -27,4 +27,11 @@ func TestGetUserIDFromContext(t *testing.T) {
 		require.Equal(t, "MOCK_SOMETHING", userID)
 	})
 
+	t.Run("should return empty user id if not set value in auth context key", func(t *testing.T) {
+		ctx := context.Background()
+
+		userID := GetUserIDFromContext(ctx)
+
+		require.Equal(t, "", userID)
+	})
 }
