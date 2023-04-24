@@ -1,6 +1,7 @@
 package todotask
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +25,7 @@ type mockGetTasksDatabase struct {
 func (m *mockGetTasksDatabase) GetAll(userID, todoID string) ([]model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []string{userID, todoID})
-	return nil, nil
+	return m.ReturnTasks, m.ReturnError
 }
 
 type testGetTasksContext struct {
@@ -34,8 +35,15 @@ type testGetTasksContext struct {
 	withUserID string
 }
 
-func (testContext *testGetTasksContext) createTask(userID uuid.UUID, name string) *model.Todo {
-	return nil
+func (testContext *testGetTasksContext) createTask(userID, todoID uuid.UUID, name string) *model.TodoTask {
+	task := model.TodoTask{
+		ID:     uuid.New(),
+		Name:   name,
+		TodoID: todoID,
+		UserID: userID,
+	}
+	testContext.db.ReturnTasks = append(testContext.db.ReturnTasks, task)
+	return &task
 }
 
 func (testContext *testGetTasksContext) requestWithUserID(userID uuid.UUID, todoID uuid.UUID) *httptest.ResponseRecorder {
@@ -84,5 +92,20 @@ func TestGetTodoTasks(t *testing.T) {
 		require.Equal(t, 200, res.Result().StatusCode)
 		require.Equal(t, 1, testCtx.db.NumberOfCalled)
 		require.Equal(t, []string{userID.String(), todoID.String()}, testCtx.db.CallWithParams[0])
+	})
+
+	t.Run("should return response body with exists tasks from database", func(t *testing.T) {
+		testCtx := newTestGetTasksContext(t)
+		testCtx.createTask(userID, todoID, "MOCK_TASK_NAME")
+
+		res := testCtx.requestWithUserID(userID, todoID)
+
+		var tasks []model.TodoTask
+		err := json.NewDecoder(res.Body).Decode(&tasks)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(tasks))
+		require.Equal(t, "MOCK_TASK_NAME", tasks[0].Name)
+		require.Equal(t, userID, tasks[0].UserID)
+		require.Equal(t, todoID, tasks[0].TodoID)
 	})
 }
