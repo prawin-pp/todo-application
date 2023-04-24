@@ -3,6 +3,7 @@ package todotask
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -152,5 +153,15 @@ func TestCreateTask(t *testing.T) {
 		require.Equal(t, "", resBody.Description)
 		require.Equal(t, false, resBody.Completed)
 		require.Equal(t, "2023-01-01", resBody.DueDate)
+	})
+
+	t.Run("should return http status = 500 when called database error", func(t *testing.T) {
+		testCtx := newTestCreateTaskContext(t)
+		testCtx.db.ReturnError = errors.New("DATABASE_ERROR")
+		body := CreateTodoTaskRequest{}
+
+		res := testCtx.sendRequest(userID, todoID, body)
+
+		require.Equal(t, 500, res.Result().StatusCode)
 	})
 }
