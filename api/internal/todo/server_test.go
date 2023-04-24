@@ -33,13 +33,15 @@ func (testContext *testGetTodosContext) WithUserID(userID uuid.UUID) {
 }
 
 func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string) *model.Todo {
-	return &model.Todo{
+	todo := model.Todo{
 		ID:        uuid.New(),
 		Name:      name,
 		UserID:    userID,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+	testContext.db.ExistsTodos = append(testContext.db.ExistsTodos, todo)
+	return &todo
 }
 
 func (testContext *testGetTodosContext) sendRequest() *httptest.ResponseRecorder {
