@@ -2,6 +2,7 @@ package todo
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -56,5 +57,15 @@ func TestGetTodos(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, 1, len(todos))
 		require.Equal(t, "MOCK_TODO", todos[0].Name)
+	})
+
+	t.Run("should return http error with status = 500 when called db with error", func(t *testing.T) {
+		testCtx := newTestGetTodosContext(t)
+		testCtx.WithUserID(userID)
+		testCtx.WithGetTodosError(errors.New("SOMETHING_WENT_WRONG"))
+
+		res := testCtx.sendRequest()
+
+		require.Equal(t, 500, res.Result().StatusCode)
 	})
 }

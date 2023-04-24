@@ -28,6 +28,7 @@ func (testContext *testGetTodosContext) authMiddleware(next bunrouter.HandlerFun
 		return next(w, req.WithContext(ctx))
 	}
 }
+
 func (testContext *testGetTodosContext) WithUserID(userID uuid.UUID) {
 	testContext.withUserID = userID.String()
 }
@@ -42,6 +43,10 @@ func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string
 	}
 	testContext.db.ExistsTodos = append(testContext.db.ExistsTodos, todo)
 	return &todo
+}
+
+func (testContext *testGetTodosContext) WithGetTodosError(err error) {
+	testContext.db.ReturnError = err
 }
 
 func (testContext *testGetTodosContext) sendRequest() *httptest.ResponseRecorder {
