@@ -3,6 +3,7 @@ package todotask
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -163,4 +164,12 @@ func TestPartialUpdateTask(t *testing.T) {
 		require.Equal(t, reqBody.DueDate, resBody.DueDate)
 	})
 
+	t.Run("should return status 500 when called database error", func(t *testing.T) {
+		testCtx := newTestPartialUpdateTaskContext(t)
+		testCtx.db.ReturnError = errors.New("MOCK_ERROR")
+
+		res := testCtx.sendRequest(userID, todoID, taskID, reqBody)
+
+		require.Equal(t, 500, res.Result().StatusCode)
+	})
 }
