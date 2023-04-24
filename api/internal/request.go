@@ -8,8 +8,6 @@ import (
 
 func GetUserIDFromContext(ctx context.Context) string {
 	key := ctx.Value(auth.AuthContextKey{})
-
 	uid, _ := key.(string)
-
 	return uid
 }
