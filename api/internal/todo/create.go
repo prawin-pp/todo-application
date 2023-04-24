@@ -10,17 +10,17 @@ import (
 )
 
 func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) error {
-	var todo model.Todo
+	var body model.Todo
 
-	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return nil
 	}
 
 	uid := internal.GetUserIDFromContext(r.Context())
 
-	s.db.Create(uid, todo.Name)
+	todo, _ := s.db.Create(uid, body.Name)
 
 	w.WriteHeader(http.StatusCreated)
-	return nil
+	return bunrouter.JSON(w, todo)
 }

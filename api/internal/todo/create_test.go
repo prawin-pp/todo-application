@@ -2,6 +2,7 @@ package todo
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -99,5 +100,17 @@ func TestCreateTodo(t *testing.T) {
 
 		require.Equal(t, 1, testCtx.db.NumberOfCalled)
 		require.Equal(t, []string{userID.String(), "MOCK_NAME"}, testCtx.db.CallWithParams[0])
+	})
+
+	t.Run("should return response body with exists todo in database", func(t *testing.T) {
+		testCtx := newTestCreateTodoContext(t)
+		req := []byte(`{ "name": "MOCK_NAME" }`)
+
+		res := testCtx.requestWithUserID(userID, bytes.NewReader(req))
+
+		var todo model.Todo
+		err := json.NewDecoder(res.Body).Decode(&todo)
+		require.NoError(t, err)
+		require.Equal(t, "MOCK_NAME", todo.Name)
 	})
 }
