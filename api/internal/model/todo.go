@@ -12,7 +12,7 @@ type Todo struct {
 
 	ID        uuid.UUID    `json:"id" bun:"id,type:uuid,pk,default:uuid_generate_v4()"`
 	Name      string       `json:"name" bun:"name,type:text"`
-	UserID    uuid.UUID    `json:"userId" bun:"user_id,type:uuid,notnull"`
+	UserID    uuid.UUID    `json:"-" bun:"user_id,type:uuid,notnull"`
 	CreatedAt time.Time    `json:"createdAt" bun:"created_at,type:timestamptz,default:current_timestamp"`
 	UpdatedAt time.Time    `json:"updatedAt" bun:"updated_at,type:timestamptz,default:current_timestamp"`
 	DeletedAt bun.NullTime `json:"-" bun:"deleted_at,type:timestamptz,soft_delete,nullzero"`
