@@ -22,3 +22,17 @@ type TodoTask struct {
 	UpdatedAt   time.Time    `json:"updatedAt" bun:"updated_at,type:timestamptz,default:current_timestamp"`
 	DeletedAt   bun.NullTime `json:"-" bun:"deleted_at,type:timestamptz,soft_delete"`
 }
+
+type CreateTodoTaskRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
+	DueDate     string `json:"dueDate"`
+}
+
+type PartialUpdateTodoTaskRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Completed   bool   `json:"completed"`
+	DueDate     string `json:"dueDate"`
+}

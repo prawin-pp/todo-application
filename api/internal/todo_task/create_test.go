@@ -25,7 +25,7 @@ type mockCreateTaskDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockCreateTaskDatabase) Create(ctx context.Context, userID, todoID string, req CreateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockCreateTaskDatabase) Create(ctx context.Context, userID, todoID string, req model.CreateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, req})
 	return &model.TodoTask{
@@ -49,7 +49,7 @@ type testCreateTaskContext struct {
 	withUserID string
 }
 
-func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, body CreateTodoTaskRequest) *httptest.ResponseRecorder {
+func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, body model.CreateTodoTaskRequest) *httptest.ResponseRecorder {
 	testContext.withUserID = userID.String()
 
 	var buf bytes.Buffer
@@ -97,7 +97,7 @@ func TestCreateTask(t *testing.T) {
 	t.Run("should return http status 201 when called", func(t *testing.T) {
 		testCtx := newTestCreateTaskContext(t)
 
-		res := testCtx.sendRequest(userID, todoID, CreateTodoTaskRequest{
+		res := testCtx.sendRequest(userID, todoID, model.CreateTodoTaskRequest{
 			Name:        "MOCK_TASK_NAME",
 			Description: "",
 			Completed:   false,
@@ -109,7 +109,7 @@ func TestCreateTask(t *testing.T) {
 
 	t.Run("should call create task to database when called", func(t *testing.T) {
 		testCtx := newTestCreateTaskContext(t)
-		body := CreateTodoTaskRequest{
+		body := model.CreateTodoTaskRequest{
 			Name:        "MOCK_TASK_NAME",
 			Description: "",
 			Completed:   false,
@@ -136,7 +136,7 @@ func TestCreateTask(t *testing.T) {
 
 	t.Run("should return response body with created task from database", func(t *testing.T) {
 		testCtx := newTestCreateTaskContext(t)
-		body := CreateTodoTaskRequest{
+		body := model.CreateTodoTaskRequest{
 			Name:        "MOCK_TASK_NAME",
 			Description: "",
 			Completed:   false,
@@ -159,7 +159,7 @@ func TestCreateTask(t *testing.T) {
 	t.Run("should return http status = 500 when called database error", func(t *testing.T) {
 		testCtx := newTestCreateTaskContext(t)
 		testCtx.db.ReturnError = errors.New("DATABASE_ERROR")
-		body := CreateTodoTaskRequest{}
+		body := model.CreateTodoTaskRequest{}
 
 		res := testCtx.sendRequest(userID, todoID, body)
 

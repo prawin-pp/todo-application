@@ -29,7 +29,7 @@ func (m *mockPartialUpdateTask) CreateTask(task model.TodoTask) {
 	m.ExistsTasks = append(m.ExistsTasks, task)
 }
 
-func (m *mockPartialUpdateTask) PartialUpdate(ctx context.Context, userID, todoID, taskID string, req PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockPartialUpdateTask) PartialUpdate(ctx context.Context, userID, todoID, taskID string, req model.PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID, req})
 
@@ -59,7 +59,7 @@ type testPartialUpdateTaskContext struct {
 	withUserID string
 }
 
-func (testContext *testPartialUpdateTaskContext) sendRequest(userID, todoID, taskID uuid.UUID, body PartialUpdateTodoTaskRequest) *httptest.ResponseRecorder {
+func (testContext *testPartialUpdateTaskContext) sendRequest(userID, todoID, taskID uuid.UUID, body model.PartialUpdateTodoTaskRequest) *httptest.ResponseRecorder {
 	testContext.withUserID = userID.String()
 
 	var buf bytes.Buffer
@@ -104,7 +104,7 @@ func TestPartialUpdateTask(t *testing.T) {
 	userID := uuid.New()
 	todoID := uuid.New()
 	taskID := uuid.New()
-	reqBody := PartialUpdateTodoTaskRequest{
+	reqBody := model.PartialUpdateTodoTaskRequest{
 		Name:        "MOCK_TASK_NAME",
 		Description: "MOCK_DESCRIPTION",
 		Completed:   true,
