@@ -3,6 +3,7 @@ package todotask
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -45,10 +46,10 @@ func (m *mockPartialUpdateTask) PartialUpdate(ctx context.Context, userID, todoI
 	if result == nil {
 		return nil, m.ReturnError
 	}
-	result.Name = req.Name
-	result.Description = req.Description
-	result.Completed = req.Completed
-	result.DueDate = req.DueDate
+	result.Name = req.Name.String
+	result.Description = req.Description.String
+	result.Completed = req.Completed.Bool
+	result.DueDate = req.DueDate.String
 	return result, m.ReturnError
 }
 
@@ -105,10 +106,10 @@ func TestPartialUpdateTask(t *testing.T) {
 	todoID := uuid.New()
 	taskID := uuid.New()
 	reqBody := model.PartialUpdateTodoTaskRequest{
-		Name:        "MOCK_TASK_NAME",
-		Description: "MOCK_DESCRIPTION",
-		Completed:   true,
-		DueDate:     "2023-01-01",
+		Name:        sql.NullString{String: "MOCK_TASK_NAME", Valid: true},
+		Description: sql.NullString{String: "MOCK_DESCRIPTION", Valid: true},
+		Completed:   sql.NullBool{Bool: true, Valid: true},
+		DueDate:     sql.NullString{String: "", Valid: false},
 	}
 
 	t.Run("should return http status 200 when called", func(t *testing.T) {
@@ -159,10 +160,10 @@ func TestPartialUpdateTask(t *testing.T) {
 		err := json.NewDecoder(res.Body).Decode(&resBody)
 
 		require.NoError(t, err)
-		require.Equal(t, reqBody.Name, resBody.Name)
-		require.Equal(t, reqBody.Description, resBody.Description)
-		require.Equal(t, reqBody.Completed, resBody.Completed)
-		require.Equal(t, reqBody.DueDate, resBody.DueDate)
+		require.Equal(t, reqBody.Name.String, resBody.Name)
+		require.Equal(t, reqBody.Description.String, resBody.Description)
+		require.Equal(t, reqBody.Completed.Bool, resBody.Completed)
+		require.Equal(t, reqBody.DueDate.String, resBody.DueDate)
 	})
 
 	t.Run("should return status 500 when called database error", func(t *testing.T) {

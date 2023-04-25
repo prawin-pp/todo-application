@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,8 +32,8 @@ type CreateTodoTaskRequest struct {
 }
 
 type PartialUpdateTodoTaskRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Completed   bool   `json:"completed"`
-	DueDate     string `json:"dueDate"`
+	Name        sql.NullString `json:"name"`
+	Description sql.NullString `json:"description"`
+	Completed   sql.NullBool   `json:"completed"`
+	DueDate     sql.NullString `json:"dueDate"`
 }
