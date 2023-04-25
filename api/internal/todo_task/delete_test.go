@@ -21,7 +21,7 @@ type mockDeleteTaskDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockDeleteTaskDatabase) Delete(ctx context.Context, userID, todoID, taskID string) error {
+func (m *mockDeleteTaskDatabase) DeleteTask(ctx context.Context, userID, todoID, taskID string) error {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID})
 	return m.ReturnError

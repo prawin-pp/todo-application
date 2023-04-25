@@ -19,7 +19,7 @@ func (s *Server) HandleCreateTask(w http.ResponseWriter, r bunrouter.Request) er
 		return nil
 	}
 
-	task, err := s.db.Create(r.Context(), userID, todoID, body)
+	task, err := s.db.CreateTask(r.Context(), userID, todoID, body)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil

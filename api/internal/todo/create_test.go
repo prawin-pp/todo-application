@@ -26,7 +26,7 @@ type mockCreateTodoDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockCreateTodoDatabase) Create(ctx context.Context, userID, name string) (*model.Todo, error) {
+func (m *mockCreateTodoDatabase) CreateTodo(ctx context.Context, userID, name string) (*model.Todo, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []string{userID, name})
 	if m.ReturnError != nil {

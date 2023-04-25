@@ -26,11 +26,7 @@ type mockPartialUpdateTask struct {
 	ReturnError    error
 }
 
-func (m *mockPartialUpdateTask) CreateTask(task model.TodoTask) {
-	m.ExistsTasks = append(m.ExistsTasks, task)
-}
-
-func (m *mockPartialUpdateTask) PartialUpdate(ctx context.Context, userID, todoID, taskID string, req model.PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockPartialUpdateTask) PartialUpdateTask(ctx context.Context, userID, todoID, taskID string, req model.PartialUpdateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, taskID, req})
 
@@ -58,6 +54,10 @@ type testPartialUpdateTaskContext struct {
 	router     *bunrouter.Router
 	db         *mockPartialUpdateTask
 	withUserID string
+}
+
+func (testContext *testPartialUpdateTaskContext) createTask(task model.TodoTask) {
+	testContext.db.ExistsTasks = append(testContext.db.ExistsTasks, task)
 }
 
 func (testContext *testPartialUpdateTaskContext) sendRequest(userID, todoID, taskID uuid.UUID, body model.PartialUpdateTodoTaskRequest) *httptest.ResponseRecorder {
@@ -144,7 +144,7 @@ func TestPartialUpdateTask(t *testing.T) {
 
 	t.Run("should return response body with updated task", func(t *testing.T) {
 		testCtx := newTestPartialUpdateTaskContext(t)
-		testCtx.db.CreateTask(model.TodoTask{
+		testCtx.createTask(model.TodoTask{
 			ID:          taskID,
 			UserID:      userID,
 			TodoID:      todoID,

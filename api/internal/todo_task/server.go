@@ -11,10 +11,10 @@ type Server struct {
 }
 
 type Database interface {
-	GetAll(ctx context.Context, userID, todoID string) ([]model.TodoTask, error)
-	Create(ctx context.Context, userID, todoID string, req model.CreateTodoTaskRequest) (*model.TodoTask, error)
-	PartialUpdate(ctx context.Context, userID, todoID, taskID string, req model.PartialUpdateTodoTaskRequest) (*model.TodoTask, error)
-	Delete(ctx context.Context, userID, todoID, taskID string) error
+	GetTasks(ctx context.Context, userID, todoID string) ([]model.TodoTask, error)
+	CreateTask(ctx context.Context, userID, todoID string, req model.CreateTodoTaskRequest) (*model.TodoTask, error)
+	PartialUpdateTask(ctx context.Context, userID, todoID, taskID string, req model.PartialUpdateTodoTaskRequest) (*model.TodoTask, error)
+	DeleteTask(ctx context.Context, userID, todoID, taskID string) error
 }
 
 func NewServer(db Database) *Server {

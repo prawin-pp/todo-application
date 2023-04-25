@@ -25,7 +25,7 @@ type mockCreateTaskDatabase struct {
 	ReturnError    error
 }
 
-func (m *mockCreateTaskDatabase) Create(ctx context.Context, userID, todoID string, req model.CreateTodoTaskRequest) (*model.TodoTask, error) {
+func (m *mockCreateTaskDatabase) CreateTask(ctx context.Context, userID, todoID string, req model.CreateTodoTaskRequest) (*model.TodoTask, error) {
 	m.NumberOfCalled++
 	m.CallWithParams = append(m.CallWithParams, []interface{}{userID, todoID, req})
 	return &model.TodoTask{

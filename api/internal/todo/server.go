@@ -11,8 +11,8 @@ type Server struct {
 }
 
 type Database interface {
-	GetAll(ctx context.Context, userID string) ([]model.Todo, error)
-	Create(ctx context.Context, userID, name string) (*model.Todo, error)
+	GetTodos(ctx context.Context, userID string) ([]model.Todo, error)
+	CreateTodo(ctx context.Context, userID, name string) (*model.Todo, error)
 }
 
 func NewServer(db Database) *Server {

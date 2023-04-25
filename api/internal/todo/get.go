@@ -10,7 +10,7 @@ import (
 func (s *Server) HandleGetTodos(w http.ResponseWriter, r bunrouter.Request) error {
 	userID := internal.GetUserIDFromContext(r.Context())
 
-	todos, err := s.db.GetAll(r.Context(), userID)
+	todos, err := s.db.GetTodos(r.Context(), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil

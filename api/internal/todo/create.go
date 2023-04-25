@@ -18,7 +18,7 @@ func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) er
 		return nil
 	}
 
-	todo, err := s.db.Create(r.Context(), userID, body.Name)
+	todo, err := s.db.CreateTodo(r.Context(), userID, body.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil
