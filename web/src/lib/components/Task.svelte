@@ -9,6 +9,6 @@
     <input type="checkbox" class="checkbox-primary checkbox" />
   </div>
   <div class="flex flex-col">
-    <span class="font-bold text-black">Test task</span>
+    <span class="font-bold text-black">{name}</span>
   </div>
 </div>

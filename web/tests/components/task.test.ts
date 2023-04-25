@@ -10,4 +10,12 @@ describe('Task component', () => {
 
     expect(taskName.innerHTML).toBe('Test task');
   });
+
+  it('should show the task name given name = "Another task"', () => {
+    render(Task, { name: 'Another task' });
+
+    const taskName = screen.getByText('Another task');
+
+    expect(taskName.innerHTML).toBe('Another task');
+  });
 });
