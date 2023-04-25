@@ -7,11 +7,19 @@ services:
       context: ./api
     image: todo-application-api:latest
     restart: always
+    ports:
+      - ${APP_PORT:-9999}:${APP_PORT:-9999}
     volumes:
       - ./api:/app
     environment:
-      APP_ENV: local
       TZ: Asia/Bangkok
+      APP_ENV: ${APP_ENV:-local}
+      APP_PORT: ${APP_PORT:-9999}
+      DATABASE_HOST: ${DB_HOST:-db}
+      DATABASE_PORT: ${DB_PORT:-5432}
+      DATABASE_NAME: ${DB_NAME:-todo}
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-postgres}
     depends_on:
       - db
 
