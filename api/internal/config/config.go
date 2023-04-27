@@ -9,11 +9,16 @@ import (
 type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
+	Auth     AuthConfig
 }
 
 type AppConfig struct {
 	Env  string
 	Port int
+}
+
+type AuthConfig struct {
+	ExpireDuration string
 }
 
 type DatabaseConfig struct {
@@ -29,6 +34,9 @@ func NewConfig() *Config {
 		App: AppConfig{
 			Env:  GetEnv("APP_ENV", "development"),
 			Port: GetEnvInt("APP_PORT", 9999),
+		},
+		Auth: AuthConfig{
+			ExpireDuration: GetEnv("AUTH_EXPIRE_DURATION", "1h"),
 		},
 		Database: DatabaseConfig{
 			Host:     GetEnv("DATABASE_HOST", "localhost"),
