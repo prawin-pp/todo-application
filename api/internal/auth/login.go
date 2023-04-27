@@ -18,6 +18,8 @@ func (s *Server) HandleLogin(w http.ResponseWriter, r bunrouter.Request) error {
 		w.WriteHeader(http.StatusUnauthorized)
 		return nil
 	}
+
+	s.db.GetUserByUsername(r.Context(), body.Username)
 	return nil
 }
 
