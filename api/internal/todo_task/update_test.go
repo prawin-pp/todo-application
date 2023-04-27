@@ -106,10 +106,10 @@ func TestPartialUpdateTask(t *testing.T) {
 	todoID := uuid.New()
 	taskID := uuid.New()
 	reqBody := model.PartialUpdateTodoTaskRequest{
-		Name:        sql.NullString{String: "MOCK_TASK_NAME", Valid: true},
-		Description: sql.NullString{String: "MOCK_DESCRIPTION", Valid: true},
-		Completed:   sql.NullBool{Bool: true, Valid: true},
-		DueDate:     sql.NullString{String: "", Valid: false},
+		Name:        model.NullString{sql.NullString{String: "MOCK_TASK_NAME", Valid: true}},
+		Description: model.NullString{sql.NullString{String: "MOCK_DESCRIPTION", Valid: true}},
+		Completed:   model.NullBool{sql.NullBool{Bool: true, Valid: true}},
+		DueDate:     model.NullString{sql.NullString{String: "", Valid: false}},
 	}
 
 	t.Run("should return http status 200 when called", func(t *testing.T) {

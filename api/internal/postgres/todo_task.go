@@ -10,8 +10,12 @@ import (
 )
 
 func (db *DB) GetTasks(ctx context.Context, userID, todoID string) ([]model.TodoTask, error) {
-	var todoTasks []model.TodoTask
-	err := db.db.NewSelect().Model(&todoTasks).Where("user_id = ? AND todo_id = ?", userID, todoID).Scan(ctx)
+	todoTasks := []model.TodoTask{}
+	err := db.db.NewSelect().
+		Model(&todoTasks).
+		Where("user_id = ? AND todo_id = ?", userID, todoID).
+		Order("sort_order ASC").
+		Scan(ctx)
 	return todoTasks, err
 }
 
@@ -55,7 +59,11 @@ func (db *DB) PartialUpdateTask(ctx context.Context, userID, todoID, taskID stri
 		updated["description"] = req.Description.String
 	}
 	if req.DueDate.Valid {
-		updated["due_date"] = req.DueDate.String
+		if req.DueDate.String == "" {
+			updated["due_date"] = nil
+		} else {
+			updated["due_date"] = req.DueDate.String
+		}
 	}
 	if req.Completed.Valid {
 		updated["completed"] = req.Completed.Bool
@@ -71,6 +79,7 @@ func (db *DB) PartialUpdateTask(ctx context.Context, userID, todoID, taskID stri
 		Where("user_id = ?", userID).
 		Where("todo_id = ?", todoID).
 		Where("id = ?", taskID).
+		Where("deleted_at IS NULL").
 		Exec(ctx); err != nil {
 		return nil, err
 	}
