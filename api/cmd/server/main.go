@@ -12,6 +12,7 @@ import (
 
 	"github.com/parwin-pp/todo-application/internal/auth"
 	"github.com/parwin-pp/todo-application/internal/config"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/postgres"
 	"github.com/parwin-pp/todo-application/internal/todo"
 	todotask "github.com/parwin-pp/todo-application/internal/todo_task"
@@ -38,32 +39,47 @@ func main() {
 		))
 	}
 	db := postgres.NewDB(database)
+	encrypter := auth.NewAuthExcrption("HS256", []byte("secret"), "1h")
 
+	authServer := auth.NewServer(db, encrypter, conf.Auth)
 	todoServer := todo.NewServer(db)
 	taskServer := todotask.NewServer(db)
 
 	requestLogger := reqlog.NewMiddleware(reqlog.WithEnabled(!isProduction))
 	router := bunrouter.New(
 		bunrouter.Use(requestLogger),
-		bunrouter.Use(func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
-			return func(w http.ResponseWriter, req bunrouter.Request) error {
-				ctx := req.Context()
-				ctx = context.WithValue(ctx, auth.AuthContextKey{}, "fd270d98-ac53-47cf-8c67-29c0e20ec492")
-				return next(w, req.WithContext(ctx))
-			}
-		}),
 	)
 
-	router.GET("/todos", todoServer.HandleGetTodos)
-	router.POST("/todos", todoServer.HandleCreateTodo)
+	router.POST("/login", authServer.HandleLogin)
 
-	router.GET("/todos/:todoId/tasks", taskServer.HandleGetTasks)
-	router.POST("/todos/:todoId/tasks", taskServer.HandleCreateTask)
-	router.PATCH("/todos/:todoId/tasks/:taskId", taskServer.HandlePartialUpdateTask)
-	router.DELETE("/todos/:todoId/tasks/:taskId", taskServer.HandleDeleteTask)
+	authRouter := router.Use(middleware.NewAuthMiddleware(encrypter))
+	authRouter.GET("/me", authServer.HandleGetMe)
+	authRouter.POST("/logout", authServer.HandleLogout)
+	authRouter.GET("/todos", todoServer.HandleGetTodos)
+	authRouter.GET("/todos/:todoId", todoServer.HandleGetTodo)
+	authRouter.POST("/todos", todoServer.HandleCreateTodo)
+	authRouter.GET("/todos/:todoId/tasks", taskServer.HandleGetTasks)
+	authRouter.POST("/todos/:todoId/tasks", taskServer.HandleCreateTask)
+	authRouter.PATCH("/todos/:todoId/tasks/:taskId", taskServer.HandlePartialUpdateTask)
+	authRouter.DELETE("/todos/:todoId/tasks/:taskId", taskServer.HandleDeleteTask)
 
 	handler := http.Handler(router)
-	handler = cors.Default().Handler(handler)
+	// TODO: FOR TEST ONLY MUST BE CHANGE IN PRODUCTION
+	handler = cors.New(cors.Options{
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+		AllowedMethods: []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	}).Handler(handler)
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", conf.App.Port),
