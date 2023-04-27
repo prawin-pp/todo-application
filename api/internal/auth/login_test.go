@@ -43,4 +43,12 @@ func TestLogin(t *testing.T) {
 
 		require.Equal(t, 200, res.Result().StatusCode)
 	})
+
+	t.Run("should return http status 401 when called with invalid username or password", func(t *testing.T) {
+		testCtx := newTestLoginContext(t)
+
+		res := testCtx.sendRequest(`{ "username": "TEST_INVALID", "password": "TEST_INVALID" }`)
+
+		require.Equal(t, 401, res.Result().StatusCode)
+	})
 }
