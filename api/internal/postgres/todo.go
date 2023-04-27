@@ -8,9 +8,20 @@ import (
 )
 
 func (db *DB) GetTodos(ctx context.Context, userID string) ([]model.Todo, error) {
-	var todos []model.Todo
+	todos := []model.Todo{}
 	err := db.db.NewSelect().Model(&todos).Where("user_id = ?", userID).Scan(ctx)
 	return todos, err
+}
+
+func (db *DB) GetTodo(ctx context.Context, userID, todoID string) (*model.Todo, error) {
+	var todo model.Todo
+	if err := db.db.NewSelect().Model(&todo).
+		Where("user_id = ?", userID).
+		Where("id = ?", todoID).
+		Scan(ctx); err != nil {
+		return nil, err
+	}
+	return &todo, nil
 }
 
 func (db *DB) CreateTodo(ctx context.Context, userID, name string) (*model.Todo, error) {
