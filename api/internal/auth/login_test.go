@@ -51,4 +51,12 @@ func TestLogin(t *testing.T) {
 
 		require.Equal(t, 401, res.Result().StatusCode)
 	})
+
+	t.Run("should return http status 400 when called with invalid json", func(t *testing.T) {
+		testCtx := newTestLoginContext(t)
+
+		res := testCtx.sendRequest(`{ "username":, "password": }`)
+
+		require.Equal(t, 400, res.Result().StatusCode)
+	})
 }
