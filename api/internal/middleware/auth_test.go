@@ -32,7 +32,7 @@ func (ctx *testAuthMiddlewareContext) sendRequest(token *string) *httptest.Respo
 }
 
 func newTestAuthMiddlewareContext(t *testing.T) *testAuthMiddlewareContext {
-	encrypter := auth.NewAuthExcrption("HS256", []byte("TEST_SECRET"), "1h")
+	encrypter := auth.NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
 	router := bunrouter.New(bunrouter.Use(NewAuthMiddleware(encrypter)))
 	testCtx := &testAuthMiddlewareContext{
 		t:                 t,

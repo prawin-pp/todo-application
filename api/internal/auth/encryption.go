@@ -15,7 +15,7 @@ type AuthEncryption struct {
 	TTL           time.Duration
 }
 
-func NewAuthExcrption(method string, secret interface{}, ttl string) *AuthEncryption {
+func NewAuthEncryption(method string, secret interface{}, ttl string) *AuthEncryption {
 	duration, err := time.ParseDuration(ttl)
 	if err != nil {
 		log.Fatalf("failed to parse ttl: %v", err)

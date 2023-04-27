@@ -39,7 +39,7 @@ func main() {
 		))
 	}
 	db := postgres.NewDB(database)
-	encrypter := auth.NewAuthExcrption("HS256", []byte("secret"), "1h")
+	encrypter := auth.NewAuthEncryption("HS256", []byte(conf.Auth.SecretKey), "1h")
 
 	authServer := auth.NewServer(db, encrypter, conf.Auth)
 	todoServer := todo.NewServer(db)

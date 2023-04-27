@@ -64,7 +64,7 @@ func (ctx *testLoginContext) sendRequest(body string) *httptest.ResponseRecorder
 
 func newTestLoginContext(t *testing.T) *testLoginContext {
 	db := &mockGetUserDatabase{}
-	encrypter := NewAuthExcrption("HS256", []byte("TEST_SECRET"), "1h")
+	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
 	conf := config.AuthConfig{ExpireDuration: "1h"}
 	server := NewServer(db, encrypter, conf)
 	router := bunrouter.New()
@@ -166,7 +166,7 @@ type testLogoutContext struct {
 
 func newTestLogoutContext(t *testing.T) *testLogoutContext {
 	db := &mockGetUserDatabase{}
-	encrypter := NewAuthExcrption("HS256", []byte("TEST_SECRET"), "1h")
+	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
 	conf := config.AuthConfig{ExpireDuration: "1h"}
 	server := NewServer(db, encrypter, conf)
 	router := bunrouter.New()

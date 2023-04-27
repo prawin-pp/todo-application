@@ -19,6 +19,7 @@ type AppConfig struct {
 
 type AuthConfig struct {
 	ExpireDuration string
+	SecretKey      string
 }
 
 type DatabaseConfig struct {
@@ -37,6 +38,7 @@ func NewConfig() *Config {
 		},
 		Auth: AuthConfig{
 			ExpireDuration: GetEnv("AUTH_EXPIRE_DURATION", "1h"),
+			SecretKey:      GetEnv("AUTH_SECRET_KEY", "secret"),
 		},
 		Database: DatabaseConfig{
 			Host:     GetEnv("DATABASE_HOST", "localhost"),
