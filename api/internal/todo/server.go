@@ -12,6 +12,7 @@ type Server struct {
 
 type Database interface {
 	GetTodos(ctx context.Context, userID string) ([]model.Todo, error)
+	GetTodo(ctx context.Context, userID, todoID string) (*model.Todo, error)
 	CreateTodo(ctx context.Context, userID, name string) (*model.Todo, error)
 }
 
