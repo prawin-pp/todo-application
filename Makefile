@@ -16,12 +16,13 @@ dev: ## start dev containers
 	@echo "Starting dev containers..."
 	@docker compose down
 	@docker compose -f docker-compose.yml up -d
+	$(MAKE) migrate-reset
 
 .PHONY: log
 log: ## show logs
 	@echo "Showing logs..."
 	@docker compose -f docker-compose.yml logs -f
-	
+
 .PHONY: migrate-create
 migrate-create: ## create a new database migration
 	@read -p "Enter the name of the new migration: " name; \
