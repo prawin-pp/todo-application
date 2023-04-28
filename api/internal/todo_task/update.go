@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Server) HandlePartialUpdateTask(w http.ResponseWriter, r bunrouter.Request) error {
-	userID := internal.GetUserIDFromContext(r.Context())
+	userID := internal.UserIDFromContext(r.Context())
 	todoID := r.Param("todoId")
 	taskID := r.Param("taskId")
 

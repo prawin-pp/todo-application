@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Server) HandleGetTasks(w http.ResponseWriter, r bunrouter.Request) error {
-	userID := internal.GetUserIDFromContext(r.Context())
+	userID := internal.UserIDFromContext(r.Context())
 	todoID := r.Param("todoId")
 
 	tasks, err := s.db.GetTasks(r.Context(), userID, todoID)

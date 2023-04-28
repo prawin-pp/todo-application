@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) error {
-	userID := internal.GetUserIDFromContext(r.Context())
+	userID := internal.UserIDFromContext(r.Context())
 
 	var body model.Todo
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {

@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Server) HandleGetTodos(w http.ResponseWriter, r bunrouter.Request) error {
-	userID := internal.GetUserIDFromContext(r.Context())
+	userID := internal.UserIDFromContext(r.Context())
 
 	todos, err := s.db.GetTodos(r.Context(), userID)
 	if err != nil {
@@ -20,7 +20,7 @@ func (s *Server) HandleGetTodos(w http.ResponseWriter, r bunrouter.Request) erro
 }
 
 func (s *Server) HandleGetTodo(w http.ResponseWriter, r bunrouter.Request) error {
-	userID := internal.GetUserIDFromContext(r.Context())
+	userID := internal.UserIDFromContext(r.Context())
 	todoID := r.Param("todoId")
 
 	todo, err := s.db.GetTodo(r.Context(), userID, todoID)

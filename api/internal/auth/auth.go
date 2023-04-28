@@ -9,8 +9,6 @@ import (
 	"github.com/uptrace/bunrouter"
 )
 
-type AuthContextKey struct{}
-
 func (s *Server) HandleLogin(w http.ResponseWriter, r bunrouter.Request) error {
 	var body LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {

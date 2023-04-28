@@ -3,11 +3,12 @@ package auth
 import (
 	"net/http"
 
+	"github.com/parwin-pp/todo-application/internal"
 	"github.com/uptrace/bunrouter"
 )
 
 func (s *Server) HandleGetMe(w http.ResponseWriter, r bunrouter.Request) error {
-	value := r.Context().Value(AuthContextKey{})
+	value := r.Context().Value(internal.AuthContextKey{})
 
 	userID, ok := value.(string)
 	if !ok {

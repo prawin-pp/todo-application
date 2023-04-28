@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/parwin-pp/todo-application/internal"
 	"github.com/parwin-pp/todo-application/internal/auth"
 	"github.com/uptrace/bunrouter"
 )
@@ -25,7 +26,7 @@ func NewAuthMiddleware(encrypter *auth.AuthEncryption) bunrouter.MiddlewareFunc 
 
 			userID, _ := claims.GetSubject()
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, auth.AuthContextKey{}, userID)
+			ctx = context.WithValue(ctx, internal.AuthContextKey{}, userID)
 			return next(w, r.WithContext(ctx))
 		}
 	}
