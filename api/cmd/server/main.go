@@ -27,6 +27,8 @@ func main() {
 	isProduction := conf.App.Env == "production"
 
 	db := MustGetDBConnection(conf.Database, isProduction)
+	defer db.Close()
+
 	encrypter := MustGetEncrypter(conf.Auth)
 
 	authServer := auth.NewServer(db, encrypter, conf.Auth)
@@ -124,7 +126,6 @@ func MustGetEncrypter(conf config.AuthConfig) *auth.AuthEncryption {
 
 func MustGetDBConnection(conf config.DatabaseConfig, isProduction bool) *postgres.DB {
 	database := postgres.GetConnection(conf)
-	defer database.Close()
 
 	if err := database.Ping(); err != nil {
 		log.Fatalf("could not ping DB: %v", err)

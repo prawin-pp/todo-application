@@ -14,6 +14,10 @@ type DB struct {
 	db *bun.DB
 }
 
+func (db *DB) Close() error {
+	return db.db.Close()
+}
+
 func NewDB(db *bun.DB) *DB {
 	return &DB{db: db}
 }
