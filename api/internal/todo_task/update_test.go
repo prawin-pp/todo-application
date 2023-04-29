@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
@@ -89,15 +90,18 @@ func (testContext *testPartialUpdateTaskContext) sendRequestString(userID, todoI
 }
 
 func newTestPartialUpdateTaskContext(t *testing.T) *testPartialUpdateTaskContext {
+	db := &mockPartialUpdateTask{}
 	testCtx := &testPartialUpdateTaskContext{t: t}
-	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
+	router := bunrouter.New()
+	group := router.Use(mock.NewAuthMiddleware(func() string {
 		return testCtx.withUserID
-	})))
-	testCtx.db = &mockPartialUpdateTask{}
+	}))
 
-	server := NewServer(testCtx.db)
-	testCtx.router.PATCH("/todos/:todoId/tasks/:taskId", server.HandlePartialUpdateTask)
+	server := NewServer(db)
+	group.PATCH("/todos/:todoId/tasks/:taskId", server.HandlePartialUpdateTask)
 
+	testCtx.db = db
+	testCtx.router = router
 	return testCtx
 }
 

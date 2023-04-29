@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
 )
@@ -47,15 +48,18 @@ func (testContext *testDeleteTaskContext) sendRequest(userID, todoID, taskID uui
 }
 
 func newTestDeleteTaskContext(t *testing.T) *testDeleteTaskContext {
+	db := &mockDeleteTaskDatabase{}
 	testCtx := &testDeleteTaskContext{t: t}
-	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
+	router := bunrouter.New()
+	group := router.Use(mock.NewAuthMiddleware(func() string {
 		return testCtx.withUserID
-	})))
-	testCtx.db = &mockDeleteTaskDatabase{}
+	}))
 
-	server := NewServer(testCtx.db)
-	testCtx.router.DELETE("/todos/:todoId/tasks/:taskId", server.HandleDeleteTask)
+	server := NewServer(db)
+	group.DELETE("/todos/:todoId/tasks/:taskId", server.HandleDeleteTask)
 
+	testCtx.db = db
+	testCtx.router = router
 	return testCtx
 }
 
