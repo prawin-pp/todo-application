@@ -8,13 +8,7 @@ import (
 )
 
 func (s *Server) HandleGetMe(w http.ResponseWriter, r bunrouter.Request) error {
-	value := r.Context().Value(internal.AuthContextKey{})
-
-	userID, ok := value.(string)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return nil
-	}
+	userID := internal.UserIDFromContext(r.Context())
 
 	user, err := s.db.GetUser(r.Context(), userID)
 	if err != nil {

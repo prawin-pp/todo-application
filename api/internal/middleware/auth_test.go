@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/parwin-pp/todo-application/internal"
 	"github.com/parwin-pp/todo-application/internal/auth"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
@@ -42,7 +43,7 @@ func newTestAuthMiddlewareContext(t *testing.T) *testAuthMiddlewareContext {
 	}
 
 	router.GET("/", func(w http.ResponseWriter, r bunrouter.Request) error {
-		value := r.Context().Value(auth.AuthContextKey{})
+		value := r.Context().Value(internal.AuthContextKey{})
 		userID, ok := value.(string)
 		if ok {
 			testCtx.UserIDFromContext = userID
