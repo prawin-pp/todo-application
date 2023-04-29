@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/parwin-pp/todo-application/internal"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/stretchr/testify/require"
@@ -18,12 +20,12 @@ type testAuthMiddlewareContext struct {
 	UserIDFromContext string
 }
 
-func (ctx *testAuthMiddlewareContext) sendRequest(token *string) *httptest.ResponseRecorder {
+func (ctx *testAuthMiddlewareContext) sendRequest(cookieToken *string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest("GET", "/", nil)
-	if token != nil {
+	if cookieToken != nil {
 		req.AddCookie(&http.Cookie{
 			Name:  "token",
-			Value: *token,
+			Value: *cookieToken,
 		})
 	}
 
@@ -34,6 +36,12 @@ func (ctx *testAuthMiddlewareContext) sendRequest(token *string) *httptest.Respo
 
 func newTestAuthMiddlewareContext(t *testing.T) *testAuthMiddlewareContext {
 	encrypter := &mock.AuthEncryptor{}
+	encrypter.VerifyAuthTokenFn = func(token string) (*jwt.Token, *jwt.MapClaims, error) {
+		mock := jwt.New(jwt.SigningMethodHS256)
+		mapClaims := mock.Claims.(jwt.MapClaims)
+		return mock, &mapClaims, nil
+	}
+
 	router := bunrouter.New(bunrouter.Use(NewAuthMiddleware(encrypter)))
 	testCtx := &testAuthMiddlewareContext{
 		t:                 t,
@@ -56,11 +64,16 @@ func newTestAuthMiddlewareContext(t *testing.T) *testAuthMiddlewareContext {
 func TestAuthMiddleware(t *testing.T) {
 	t.Run("should set user id in context when called with valid token", func(t *testing.T) {
 		testCtx := newTestAuthMiddlewareContext(t)
-		token, err := testCtx.en.SignAuthToken("MOCK_USER_ID", map[string]interface{}{})
+		testCtx.en.VerifyAuthTokenFn = func(token string) (*jwt.Token, *jwt.MapClaims, error) {
+			mock := jwt.New(jwt.SigningMethodHS256)
+			mapClaims := mock.Claims.(jwt.MapClaims)
+			mapClaims["sub"] = "MOCK_USER_ID"
+			return mock, &mapClaims, nil
+		}
+		token := "MOCK_VALID_TOKEN"
 
 		testCtx.sendRequest(&token)
 
-		require.NoError(t, err)
 		require.Equal(t, "MOCK_USER_ID", testCtx.UserIDFromContext)
 	})
 
@@ -74,6 +87,10 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("should return http status 401 when set invalid token in cookie", func(t *testing.T) {
 		testCtx := newTestAuthMiddlewareContext(t)
+		testCtx.en.VerifyAuthTokenFn = func(token string) (*jwt.Token, *jwt.MapClaims, error) {
+			return nil, nil, errors.New("INVALID_TOKEN")
+		}
+
 		token := "INVALID_TOKEN"
 
 		res := testCtx.sendRequest(&token)
