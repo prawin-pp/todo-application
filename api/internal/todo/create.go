@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/parwin-pp/todo-application/internal"
+	"github.com/parwin-pp/todo-application/internal/httperror"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/uptrace/bunrouter"
 )
@@ -14,14 +15,12 @@ func (s *Server) HandleCreateTodo(w http.ResponseWriter, r bunrouter.Request) er
 
 	var body model.Todo
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return httperror.ErrInvalidRequest
 	}
 
 	todo, err := s.db.CreateTodo(r.Context(), userID, body.Name)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return nil
+		return httperror.ErrInternalServer
 	}
 
 	w.WriteHeader(http.StatusCreated)

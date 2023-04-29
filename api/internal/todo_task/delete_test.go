@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
@@ -35,28 +36,27 @@ type testDeleteTaskContext struct {
 	withUserID string
 }
 
-func (testContext *testDeleteTaskContext) sendRequest(userID, todoID, taskID uuid.UUID) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
-
+func (testCtx *testDeleteTaskContext) sendRequest(userID, todoID, taskID uuid.UUID) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s/tasks/%s", todoID, taskID)
 	req := httptest.NewRequest(http.MethodDelete, path, nil)
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
 func newTestDeleteTaskContext(t *testing.T) *testDeleteTaskContext {
 	db := &mockDeleteTaskDatabase{}
 	testCtx := &testDeleteTaskContext{t: t}
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 
 	server := NewServer(db)
-	group.DELETE("/todos/:todoId/tasks/:taskId", server.HandleDeleteTask)
+	router.DELETE("/todos/:todoId/tasks/:taskId", server.HandleDeleteTask)
 
 	testCtx.db = db
 	testCtx.router = router

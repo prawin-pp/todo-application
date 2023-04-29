@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -50,44 +51,41 @@ type testCreateTaskContext struct {
 	withUserID string
 }
 
-func (testContext *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, body model.CreateTodoTaskRequest) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
+func (testCtx *testCreateTaskContext) sendRequest(userID, todoID uuid.UUID, body model.CreateTodoTaskRequest) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(body)
-	require.NoError(testContext.t, err)
+	require.NoError(testCtx.t, err)
 
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s", todoID)
 	req := httptest.NewRequest(http.MethodPost, path, &buf)
-	err = testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
-func (testContext *testCreateTaskContext) sendRequestString(userID, todoID uuid.UUID, body string) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
-
+func (testCtx *testCreateTaskContext) sendRequestString(userID, todoID uuid.UUID, body string) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s", todoID)
 	req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte(body)))
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
 func newTestCreateTaskContext(t *testing.T) *testCreateTaskContext {
 	db := &mockCreateTaskDatabase{}
 	testCtx := &testCreateTaskContext{t: t}
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 
 	server := NewServer(db)
-	group.POST("/todos/:todoId", server.HandleCreateTask)
+	router.POST("/todos/:todoId", server.HandleCreateTask)
 
 	testCtx.db = db
 	testCtx.router = router

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -38,40 +39,38 @@ type testGetTasksContext struct {
 	withUserID string
 }
 
-func (testContext *testGetTasksContext) createTask(userID, todoID uuid.UUID, name string) *model.TodoTask {
+func (testCtx *testGetTasksContext) createTask(userID, todoID uuid.UUID, name string) *model.TodoTask {
 	task := model.TodoTask{
 		ID:     uuid.New(),
 		Name:   name,
 		TodoID: todoID,
 		UserID: userID,
 	}
-	testContext.db.ReturnTasks = append(testContext.db.ReturnTasks, task)
+	testCtx.db.ReturnTasks = append(testCtx.db.ReturnTasks, task)
 	return &task
 }
 
-func (testContext *testGetTasksContext) requestWithUserID(userID uuid.UUID, todoID uuid.UUID) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
-
+func (testCtx *testGetTasksContext) requestWithUserID(userID uuid.UUID, todoID uuid.UUID) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s", todoID)
 	req := httptest.NewRequest(http.MethodGet, path, nil)
-
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
 func newTestGetTasksContext(t *testing.T) *testGetTasksContext {
 	db := &mockGetTasksDatabase{}
 	testCtx := &testGetTasksContext{t: t}
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 
 	server := NewServer(db)
-	group.GET("/todos/:todoId", server.HandleGetTasks)
+	router.GET("/todos/:todoId", server.HandleGetTasks)
 
 	testCtx.db = db
 	testCtx.router = router

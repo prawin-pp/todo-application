@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -57,48 +58,45 @@ type testPartialUpdateTaskContext struct {
 	withUserID string
 }
 
-func (testContext *testPartialUpdateTaskContext) createTask(task model.TodoTask) {
-	testContext.db.ExistsTasks = append(testContext.db.ExistsTasks, task)
+func (testCtx *testPartialUpdateTaskContext) createTask(task model.TodoTask) {
+	testCtx.db.ExistsTasks = append(testCtx.db.ExistsTasks, task)
 }
 
-func (testContext *testPartialUpdateTaskContext) sendRequest(userID, todoID, taskID uuid.UUID, body model.PartialUpdateTodoTaskRequest) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
+func (testCtx *testPartialUpdateTaskContext) sendRequest(userID, todoID, taskID uuid.UUID, body model.PartialUpdateTodoTaskRequest) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(body)
-	require.NoError(testContext.t, err)
+	require.NoError(testCtx.t, err)
 
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s/tasks/%s", todoID, taskID)
 	req := httptest.NewRequest(http.MethodPatch, path, &buf)
-	err = testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
-func (testContext *testPartialUpdateTaskContext) sendRequestString(userID, todoID, taskID uuid.UUID, body string) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
-
+func (testCtx *testPartialUpdateTaskContext) sendRequestString(userID, todoID, taskID uuid.UUID, body string) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 	w := httptest.NewRecorder()
 	path := fmt.Sprintf("/todos/%s/tasks/%s", todoID, taskID)
 	req := httptest.NewRequest(http.MethodPatch, path, bytes.NewReader([]byte(body)))
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
 func newTestPartialUpdateTaskContext(t *testing.T) *testPartialUpdateTaskContext {
 	db := &mockPartialUpdateTask{}
 	testCtx := &testPartialUpdateTaskContext{t: t}
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 
 	server := NewServer(db)
-	group.PATCH("/todos/:todoId/tasks/:taskId", server.HandlePartialUpdateTask)
+	router.PATCH("/todos/:todoId/tasks/:taskId", server.HandlePartialUpdateTask)
 
 	testCtx.db = db
 	testCtx.router = router
@@ -110,10 +108,10 @@ func TestPartialUpdateTask(t *testing.T) {
 	todoID := uuid.New()
 	taskID := uuid.New()
 	reqBody := model.PartialUpdateTodoTaskRequest{
-		Name:        model.NullString{sql.NullString{String: "MOCK_TASK_NAME", Valid: true}},
-		Description: model.NullString{sql.NullString{String: "MOCK_DESCRIPTION", Valid: true}},
-		Completed:   model.NullBool{sql.NullBool{Bool: true, Valid: true}},
-		DueDate:     model.NullString{sql.NullString{String: "", Valid: false}},
+		Name:        model.NullString{NullString: sql.NullString{String: "MOCK_TASK_NAME", Valid: true}},
+		Description: model.NullString{NullString: sql.NullString{String: "MOCK_DESCRIPTION", Valid: true}},
+		Completed:   model.NullBool{NullBool: sql.NullBool{Bool: true, Valid: true}},
+		DueDate:     model.NullString{NullString: sql.NullString{String: "", Valid: false}},
 	}
 
 	t.Run("should return http status 200 when called", func(t *testing.T) {

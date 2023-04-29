@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,7 @@ type testGetTodosContext struct {
 	withUserID string
 }
 
-func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string) *model.Todo {
+func (testCtx *testGetTodosContext) createTodo(userID uuid.UUID, name string) *model.Todo {
 	todo := model.Todo{
 		ID:        uuid.New(),
 		Name:      name,
@@ -46,23 +47,21 @@ func (testContext *testGetTodosContext) createTodo(userID uuid.UUID, name string
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	testContext.db.ReturnTodos = append(testContext.db.ReturnTodos, todo)
+	testCtx.db.ReturnTodos = append(testCtx.db.ReturnTodos, todo)
 	return &todo
 }
 
-func (testContext *testGetTodosContext) withGetTodosError(err error) {
-	testContext.db.ReturnError = err
+func (testCtx *testGetTodosContext) withGetTodosError(err error) {
+	testCtx.db.ReturnError = err
 }
 
-func (testContext *testGetTodosContext) requestWithUserID(userID uuid.UUID) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
+func (testCtx *testGetTodosContext) requestWithUserID(userID uuid.UUID) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/todos", nil)
 
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
@@ -70,13 +69,15 @@ func newTestGetTodosContext(t *testing.T) *testGetTodosContext {
 	db := &mockGetTodosDatabase{}
 	testCtx := &testGetTodosContext{t: t}
 
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 
 	server := NewServer(db)
-	group.GET("/todos", server.HandleGetTodos)
+	router.GET("/todos", server.HandleGetTodos)
 
 	testCtx.db = db
 	testCtx.router = router
@@ -161,12 +162,14 @@ func newTestGetTodoContext(t *testing.T) *testGetTodoContext {
 		}, nil
 	}
 
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
 	server := NewServer(db)
-	group.GET("/todos/:todoId", server.HandleGetTodo)
+	router.GET("/todos/:todoId", server.HandleGetTodo)
 
 	testCtx.db = db
 	testCtx.router = router
@@ -181,9 +184,7 @@ func (testCtx *testGetTodoContext) request(todoID string, userID *string) *httpt
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/todos/"+todoID, nil)
 
-	err := testCtx.router.ServeHTTPError(w, req)
-	require.NoError(testCtx.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -50,19 +51,16 @@ type testCreateTodoContext struct {
 	withUserID string
 }
 
-func (testContext *testCreateTodoContext) withCreateTodoError(err error) {
-	testContext.db.ReturnError = err
+func (testCtx *testCreateTodoContext) withCreateTodoError(err error) {
+	testCtx.db.ReturnError = err
 }
 
-func (testContext *testCreateTodoContext) requestWithUserID(userID uuid.UUID, body io.Reader) *httptest.ResponseRecorder {
-	testContext.withUserID = userID.String()
+func (testCtx *testCreateTodoContext) requestWithUserID(userID uuid.UUID, body io.Reader) *httptest.ResponseRecorder {
+	testCtx.withUserID = userID.String()
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/todos", body)
 	req.Header.Set("Content-Type", "application/json")
-
-	err := testContext.router.ServeHTTPError(w, req)
-	require.NoError(testContext.t, err)
-
+	testCtx.router.ServeHTTP(w, req)
 	return w
 }
 
@@ -72,11 +70,13 @@ func newTestCreateTodoContext(t *testing.T) *testCreateTodoContext {
 
 	server := NewServer(db)
 
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return testCtx.withUserID
-	}))
-	group.POST("/todos", server.HandleCreateTodo)
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return testCtx.withUserID
+		})),
+	)
+	router.POST("/todos", server.HandleCreateTodo)
 
 	testCtx.db = db
 	testCtx.router = router
