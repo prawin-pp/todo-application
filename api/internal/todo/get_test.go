@@ -140,3 +140,96 @@ func TestGetTodos(t *testing.T) {
 		require.Equal(t, 500, res.Result().StatusCode)
 	})
 }
+
+type testGetTodoContext struct {
+	t          *testing.T
+	router     *bunrouter.Router
+	db         *mock.TodoDatabase
+	withUserID string
+}
+
+func newTestGetTodoContext(t *testing.T) *testGetTodoContext {
+	mockUserID := uuid.New()
+	testCtx := &testGetTodoContext{t: t, withUserID: mockUserID.String()}
+
+	db := &mock.TodoDatabase{}
+	db.GetTodoFn = func(ctx context.Context, userID, todoID string) (*model.Todo, error) {
+		return &model.Todo{
+			ID:     uuid.MustParse(todoID),
+			Name:   "MOCK_TODO",
+			UserID: uuid.MustParse(userID),
+		}, nil
+	}
+
+	router := bunrouter.New()
+	group := router.Use(mock.NewAuthMiddleware(func() string {
+		return testCtx.withUserID
+	}))
+	server := NewServer(db)
+	group.GET("/todos/:todoId", server.HandleGetTodo)
+
+	testCtx.db = db
+	testCtx.router = router
+	return testCtx
+}
+
+func (testCtx *testGetTodoContext) request(todoID string, userID *string) *httptest.ResponseRecorder {
+	if userID != nil {
+		testCtx.withUserID = *userID
+	}
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/todos/"+todoID, nil)
+
+	err := testCtx.router.ServeHTTPError(w, req)
+	require.NoError(testCtx.t, err)
+
+	return w
+}
+
+func TestGetTodo(t *testing.T) {
+	t.Run("should return http status 200 when called", func(t *testing.T) {
+		testCtx := newTestGetTodoContext(t)
+		todoID := uuid.New().String()
+
+		res := testCtx.request(todoID, nil)
+
+		require.Equal(t, 200, res.Result().StatusCode)
+	})
+
+	t.Run("should return exists todo in database", func(t *testing.T) {
+		testCtx := newTestGetTodoContext(t)
+		todoID := uuid.New().String()
+
+		res := testCtx.request(todoID, nil)
+
+		var resBody model.Todo
+		err := json.NewDecoder(res.Body).Decode(&resBody)
+		require.NoError(t, err)
+		require.Equal(t, todoID, resBody.ID.String())
+	})
+
+	t.Run("should return http status 500 when called db with error", func(t *testing.T) {
+		testCtx := newTestGetTodoContext(t)
+		todoID := uuid.New().String()
+		testCtx.db.GetTodoFn = func(ctx context.Context, userID, todoID string) (*model.Todo, error) {
+			return nil, errors.New("MOCK_ERROR")
+		}
+
+		res := testCtx.request(todoID, nil)
+
+		require.Equal(t, 500, res.Result().StatusCode)
+	})
+
+	t.Run("should return http status 404 when get todo not found", func(t *testing.T) {
+		testCtx := newTestGetTodoContext(t)
+		todoID := uuid.New().String()
+		testCtx.db.GetTodoFn = func(ctx context.Context, userID, todoID string) (*model.Todo, error) {
+			return nil, nil
+		}
+
+		res := testCtx.request(todoID, nil)
+
+		require.Equal(t, 404, res.Result().StatusCode)
+	})
+}
