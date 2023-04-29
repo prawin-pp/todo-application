@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
@@ -66,15 +67,20 @@ func (testContext *testCreateTodoContext) requestWithUserID(userID uuid.UUID, bo
 }
 
 func newTestCreateTodoContext(t *testing.T) *testCreateTodoContext {
+	db := &mockCreateTodoDatabase{}
 	testCtx := &testCreateTodoContext{t: t}
-	testCtx.router = bunrouter.New(bunrouter.Use(mockAuthMiddleware(func() string {
+
+	server := NewServer(db)
+
+	router := bunrouter.New()
+	group := router.Use(mock.NewAuthMiddleware(func() string {
 		return testCtx.withUserID
-	})))
-	testCtx.db = &mockCreateTodoDatabase{}
+	}))
+	group.POST("/todos", server.HandleCreateTodo)
 
-	server := NewServer(testCtx.db)
-	testCtx.router.POST("/todos", server.HandleCreateTodo)
-
+	testCtx.db = db
+	testCtx.router = router
+	testCtx.withUserID = uuid.NewString()
 	return testCtx
 }
 func TestCreateTodo(t *testing.T) {
