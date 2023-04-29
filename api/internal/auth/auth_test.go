@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/parwin-pp/todo-application/internal/config"
 	"github.com/parwin-pp/todo-application/internal/model"
@@ -64,8 +65,8 @@ func (ctx *testLoginContext) sendRequest(body string) *httptest.ResponseRecorder
 
 func newTestLoginContext(t *testing.T) *testLoginContext {
 	db := &mockGetUserDatabase{}
-	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
-	conf := config.AuthConfig{ExpireDuration: "1h"}
+	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), time.Hour)
+	conf := config.AuthConfig{ExpireDuration: time.Hour}
 	server := NewServer(db, encrypter, conf)
 	router := bunrouter.New()
 	router.POST("/login", server.HandleLogin)
@@ -166,8 +167,8 @@ type testLogoutContext struct {
 
 func newTestLogoutContext(t *testing.T) *testLogoutContext {
 	db := &mockGetUserDatabase{}
-	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
-	conf := config.AuthConfig{ExpireDuration: "1h"}
+	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), time.Hour)
+	conf := config.AuthConfig{ExpireDuration: time.Hour}
 	server := NewServer(db, encrypter, conf)
 	router := bunrouter.New()
 	router.POST("/logout", server.HandleLogout)

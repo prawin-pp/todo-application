@@ -4,12 +4,16 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/parwin-pp/todo-application/internal"
-	"github.com/parwin-pp/todo-application/internal/auth"
 	"github.com/uptrace/bunrouter"
 )
 
-func NewAuthMiddleware(encrypter *auth.AuthEncryption) bunrouter.MiddlewareFunc {
+type Encrypter interface {
+	VerifyAuthToken(tokenStr string) (*jwt.Token, *jwt.MapClaims, error)
+}
+
+func NewAuthMiddleware(encrypter Encrypter) bunrouter.MiddlewareFunc {
 	return func(next bunrouter.HandlerFunc) bunrouter.HandlerFunc {
 		return func(w http.ResponseWriter, r bunrouter.Request) error {
 			token, err := r.Cookie("token")

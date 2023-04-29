@@ -26,42 +26,34 @@ func main() {
 	conf := config.NewConfig()
 	isProduction := conf.App.Env == "production"
 
-	database := postgres.GetConnection(conf.Database)
-	defer database.Close()
-
-	if err := database.Ping(); err != nil {
-		log.Fatalf("could not ping DB: %v", err)
-	}
-	if !isProduction {
-		database.AddQueryHook(bundebug.NewQueryHook(
-			bundebug.WithVerbose(true),
-			bundebug.FromEnv("BUNDEBUG"),
-		))
-	}
-	db := postgres.NewDB(database)
-	encrypter := auth.NewAuthEncryption("HS256", []byte(conf.Auth.SecretKey), "1h")
+	db := MustGetDBConnection(conf.Database, isProduction)
+	encrypter := MustGetEncrypter(conf.Auth)
 
 	authServer := auth.NewServer(db, encrypter, conf.Auth)
 	todoServer := todo.NewServer(db)
 	taskServer := todotask.NewServer(db)
 
 	requestLogger := reqlog.NewMiddleware(reqlog.WithEnabled(!isProduction))
-	router := bunrouter.New(
-		bunrouter.Use(requestLogger),
-	)
+	router := bunrouter.New(bunrouter.Use(requestLogger))
 
-	router.POST("/login", authServer.HandleLogin)
+	// No auth required
+	{
+		router.POST("/login", authServer.HandleLogin)
+		router.POST("/logout", authServer.HandleLogout)
+	}
 
-	authRouter := router.Use(middleware.NewAuthMiddleware(encrypter))
-	authRouter.GET("/me", authServer.HandleGetMe)
-	authRouter.POST("/logout", authServer.HandleLogout)
-	authRouter.GET("/todos", todoServer.HandleGetTodos)
-	authRouter.GET("/todos/:todoId", todoServer.HandleGetTodo)
-	authRouter.POST("/todos", todoServer.HandleCreateTodo)
-	authRouter.GET("/todos/:todoId/tasks", taskServer.HandleGetTasks)
-	authRouter.POST("/todos/:todoId/tasks", taskServer.HandleCreateTask)
-	authRouter.PATCH("/todos/:todoId/tasks/:taskId", taskServer.HandlePartialUpdateTask)
-	authRouter.DELETE("/todos/:todoId/tasks/:taskId", taskServer.HandleDeleteTask)
+	// Auth required
+	{
+		authRouter := router.Use(middleware.NewAuthMiddleware(encrypter))
+		authRouter.GET("/me", authServer.HandleGetMe)
+		authRouter.GET("/todos", todoServer.HandleGetTodos)
+		authRouter.GET("/todos/:todoId", todoServer.HandleGetTodo)
+		authRouter.POST("/todos", todoServer.HandleCreateTodo)
+		authRouter.GET("/todos/:todoId/tasks", taskServer.HandleGetTasks)
+		authRouter.POST("/todos/:todoId/tasks", taskServer.HandleCreateTask)
+		authRouter.PATCH("/todos/:todoId/tasks/:taskId", taskServer.HandlePartialUpdateTask)
+		authRouter.DELETE("/todos/:todoId/tasks/:taskId", taskServer.HandleDeleteTask)
+	}
 
 	handler := http.Handler(router)
 	// TODO: FOR TEST ONLY MUST BE CHANGE IN PRODUCTION
@@ -81,36 +73,67 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(handler)
 
+	server := StartServer(conf.App.Port, handler)
+
+	fmt.Println(WaitExitSignal())
+	fmt.Println(Shutdown(server))
+}
+
+func Shutdown(server *http.Server) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	return server.Shutdown(ctx)
+}
+
+func WaitExitSignal() os.Signal {
+	ch := make(chan os.Signal, 3)
+	signal.Notify(
+		ch,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGTERM,
+	)
+	return <-ch
+}
+
+func StartServer(port int, handler http.Handler) *http.Server {
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%d", conf.App.Port),
+		Addr:              fmt.Sprintf(":%d", port),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       5 * time.Second,
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 		Handler:           handler,
 	}
-
-	log.Printf("listening on 0.0.0.0:%d\n", conf.App.Port)
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			log.Fatalf("could not listen on 0.0.0.0:%d: %v", conf.App.Port, err)
+			log.Fatalf("ListenAndServe failed: %v", err)
 		}
 	}()
-
-	waitForShutdown(server)
+	return server
 }
 
-func waitForShutdown(server *http.Server) {
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Printf("server is shutting down...")
+func MustGetEncrypter(conf config.AuthConfig) *auth.AuthEncryption {
+	return auth.NewAuthEncryption(
+		"HS256",
+		[]byte(conf.SecretKey),
+		conf.ExpireDuration,
+	)
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+func MustGetDBConnection(conf config.DatabaseConfig, isProduction bool) *postgres.DB {
+	database := postgres.GetConnection(conf)
+	defer database.Close()
 
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("could not gracefully shutdown the server: %v", err)
+	if err := database.Ping(); err != nil {
+		log.Fatalf("could not ping DB: %v", err)
 	}
-	log.Printf("server shutdown completed")
+	if !isProduction {
+		database.AddQueryHook(bundebug.NewQueryHook(
+			bundebug.WithVerbose(true),
+			bundebug.FromEnv("BUNDEBUG"),
+		))
+	}
+	return postgres.NewDB(database)
 }

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,10 +30,6 @@ func (s *Server) HandleLogin(w http.ResponseWriter, r bunrouter.Request) error {
 	}
 
 	jwt, _ := s.en.SignAuthToken(user.ID.String(), map[string]interface{}{})
-	expires, err := time.ParseDuration(s.config.ExpireDuration)
-	if err != nil {
-		log.Fatalf("could not parse duration: %v", err)
-	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -42,7 +37,7 @@ func (s *Server) HandleLogin(w http.ResponseWriter, r bunrouter.Request) error {
 		HttpOnly: true,
 		Secure:   true,
 		Path:     "/",
-		Expires:  time.Now().Add(expires),
+		Expires:  time.Now().Add(s.config.ExpireDuration),
 	})
 	return bunrouter.JSON(w, user)
 }

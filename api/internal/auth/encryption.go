@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -15,15 +14,11 @@ type AuthEncryption struct {
 	TTL           time.Duration
 }
 
-func NewAuthEncryption(method string, secret interface{}, ttl string) *AuthEncryption {
-	duration, err := time.ParseDuration(ttl)
-	if err != nil {
-		log.Fatalf("failed to parse ttl: %v", err)
-	}
+func NewAuthEncryption(method string, secret interface{}, ttl time.Duration) *AuthEncryption {
 	return &AuthEncryption{
 		SigningMethod: jwt.GetSigningMethod(method),
 		SigningKey:    secret,
-		TTL:           duration,
+		TTL:           ttl,
 	}
 }
 

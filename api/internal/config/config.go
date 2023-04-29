@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -18,7 +19,7 @@ type AppConfig struct {
 }
 
 type AuthConfig struct {
-	ExpireDuration string
+	ExpireDuration time.Duration
 	SecretKey      string
 }
 
@@ -37,7 +38,7 @@ func NewConfig() *Config {
 			Port: GetEnvInt("APP_PORT", 9999),
 		},
 		Auth: AuthConfig{
-			ExpireDuration: GetEnv("AUTH_EXPIRE_DURATION", "1h"),
+			ExpireDuration: GetTimeDuration("AUTH_EXPIRE_DURATION", 1*time.Hour),
 			SecretKey:      GetEnv("AUTH_SECRET_KEY", "secret"),
 		},
 		Database: DatabaseConfig{
@@ -64,6 +65,17 @@ func GetEnvInt(key string, fallback int) int {
 			log.Fatalf("bad value converting %s to int: %v", key, err)
 		}
 		return value
+	}
+	return fallback
+}
+
+func GetTimeDuration(key string, fallback time.Duration) time.Duration {
+	if value, ok := os.LookupEnv(key); ok {
+		duration, err := time.ParseDuration(value)
+		if err != nil {
+			log.Fatalf("bad value converting %s to time.Duration: %v", key, err)
+		}
+		return duration
 	}
 	return fallback
 }

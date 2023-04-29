@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/parwin-pp/todo-application/internal"
-	"github.com/parwin-pp/todo-application/internal/auth"
+	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
 )
@@ -14,7 +14,7 @@ import (
 type testAuthMiddlewareContext struct {
 	t                 *testing.T
 	router            *bunrouter.Router
-	en                *auth.AuthEncryption
+	en                *mock.AuthEncryptor
 	UserIDFromContext string
 }
 
@@ -33,7 +33,7 @@ func (ctx *testAuthMiddlewareContext) sendRequest(token *string) *httptest.Respo
 }
 
 func newTestAuthMiddlewareContext(t *testing.T) *testAuthMiddlewareContext {
-	encrypter := auth.NewAuthEncryption("HS256", []byte("TEST_SECRET"), "1h")
+	encrypter := &mock.AuthEncryptor{}
 	router := bunrouter.New(bunrouter.Use(NewAuthMiddleware(encrypter)))
 	testCtx := &testAuthMiddlewareContext{
 		t:                 t,
