@@ -36,7 +36,10 @@ func main() {
 	taskServer := todotask.NewServer(db)
 
 	requestLogger := reqlog.NewMiddleware(reqlog.WithEnabled(!isProduction))
-	router := bunrouter.New(bunrouter.Use(requestLogger))
+	router := bunrouter.New(
+		bunrouter.Use(requestLogger),
+		bunrouter.Use(middleware.NewErrorHandler),
+	)
 
 	// No auth required
 	{

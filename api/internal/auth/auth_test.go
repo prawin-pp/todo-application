@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/parwin-pp/todo-application/internal/config"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
 	"github.com/uptrace/bunrouter"
@@ -68,7 +69,7 @@ func newTestLoginContext(t *testing.T) *testLoginContext {
 	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), time.Hour)
 	conf := config.AuthConfig{ExpireDuration: time.Hour}
 	server := NewServer(db, encrypter, conf)
-	router := bunrouter.New()
+	router := bunrouter.New(bunrouter.Use(middleware.NewErrorHandler))
 	router.POST("/login", server.HandleLogin)
 
 	return &testLoginContext{
@@ -170,7 +171,7 @@ func newTestLogoutContext(t *testing.T) *testLogoutContext {
 	encrypter := NewAuthEncryption("HS256", []byte("TEST_SECRET"), time.Hour)
 	conf := config.AuthConfig{ExpireDuration: time.Hour}
 	server := NewServer(db, encrypter, conf)
-	router := bunrouter.New()
+	router := bunrouter.New(bunrouter.Use(middleware.NewErrorHandler))
 	router.POST("/logout", server.HandleLogout)
 
 	return &testLogoutContext{

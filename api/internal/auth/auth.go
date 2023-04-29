@@ -5,31 +5,31 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/parwin-pp/todo-application/internal/httperror"
 	"github.com/uptrace/bunrouter"
 )
 
 func (s *Server) HandleLogin(w http.ResponseWriter, r bunrouter.Request) error {
 	var body LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return nil
+		return httperror.ErrInvalidRequest
 	}
 
 	user, err := s.db.GetUserByUsername(r.Context(), body.Username)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return nil
+		return httperror.ErrInternalServer
 	}
 	if user == nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return nil
+		return httperror.ErrUnauthorized
 	}
 	if err = s.en.CompareHash(user.Password, body.Password); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return nil
+		return httperror.ErrUnauthorized
 	}
 
-	jwt, _ := s.en.SignAuthToken(user.ID.String(), map[string]interface{}{})
+	jwt, err := s.en.SignAuthToken(user.ID.String(), map[string]interface{}{})
+	if err != nil {
+		return httperror.ErrInternalServer
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",

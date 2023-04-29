@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/parwin-pp/todo-application/internal/config"
+	"github.com/parwin-pp/todo-application/internal/middleware"
 	"github.com/parwin-pp/todo-application/internal/mock"
 	"github.com/parwin-pp/todo-application/internal/model"
 	"github.com/stretchr/testify/require"
@@ -46,11 +47,13 @@ func newTestGetMeContext(t *testing.T) *testGetMeContext {
 
 	server := NewServer(db, en, config.AuthConfig{})
 
-	router := bunrouter.New()
-	group := router.Use(mock.NewAuthMiddleware(func() string {
-		return mockUserID.String()
-	}))
-	group.GET("/me", server.HandleGetMe)
+	router := bunrouter.New(
+		bunrouter.Use(middleware.NewErrorHandler),
+		bunrouter.Use(mock.NewAuthMiddleware(func() string {
+			return mockUserID.String()
+		})),
+	)
+	router.GET("/me", server.HandleGetMe)
 
 	return &testGetMeContext{
 		router:     router,
