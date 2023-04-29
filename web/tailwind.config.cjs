@@ -1,18 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
+  content: ['./src/**/*.{html,js,svelte,ts}', './node_modules/flowbite/**/*.js'],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#ff0090',
+        'primary-700': '#d90082',
+        'primary-900': '#8c005e',
+      },
+    },
   },
-  plugins: [require('daisyui')],
-  daisyui: {
-    themes: [
-      {
-        light: {
-          ...require("daisyui/src/colors/themes")["[data-theme=light]"],
-          primary: '#ec008c'
-        }
-      }
-    ]
-  }
+  plugins: [require('flowbite/plugin')],
 };

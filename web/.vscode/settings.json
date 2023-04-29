@@ -5,36 +5,33 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "eslint.validate": ["javascript", "typescript"],
+  "eslint.validate": ["typescript"],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true,
     "source.organizeImports": true
   },
+  "svelte.enable-ts-plugin": true,
+  "prettier.documentSelectors": ["./**/*.svelte"],
   "[svelte]": {
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.formatOnSave": false
   },
-  "[css]": {
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[scss]": {
+  "[javascript]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
+    "editor.formatOnSave": false
+  },
+  "[json]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[javascript]": {
+  "[jsonc]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[html]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "svelte.enable-ts-plugin": true,
-  "prettier.documentSelectors": ["**/*.svelte"],
-  "tailwindCSS.classAttributes": ["class", "className", "ngClass", ".*Class"]
+  }
 }
