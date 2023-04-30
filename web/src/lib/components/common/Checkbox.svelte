@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let checked: boolean = false;
+  export let checked = false;
 </script>
 
 <div class="flex">

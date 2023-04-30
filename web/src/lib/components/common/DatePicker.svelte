@@ -3,7 +3,7 @@
   import { Datepicker } from 'flowbite-datepicker';
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 
-  export let value: string = '';
+  export let value = '';
 
   let element: HTMLElement;
   let datepicker: Datepicker;
