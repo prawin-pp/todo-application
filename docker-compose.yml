@@ -1,6 +1,24 @@
 version: "3"
 services:
 
+  web:
+    build:
+      dockerfile: ./devtools/docker/Dockerfile.local
+      context: ./web
+    image: todo-application-web:latest
+    restart: always
+    ports:
+      - 5173:5173
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: ${APP_ENV:-local}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://api:9999}
+    depends_on:
+      - api
+      - db
+
   api:
     build:
       dockerfile: ./devtools/docker/Dockerfile.local
