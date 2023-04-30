@@ -11,16 +11,13 @@ WORKDIRS := $$(pwd)
 DB_CONN ?= postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable
 MIGRATE := docker run --rm --user $(CURRENT_UID):$(CURRENT_GID) -v $(WORKDIRS)/api/migrations:/migrations --network development migrate/migrate -path=/migrations/ -database "$(DB_CONN)"
 
-default: dev migrate ## start dev containers and run migrations
+default: dev ## start dev containers
 
 .PHONY: dev
 dev: ## start dev containers
 	@echo "Starting dev containers..."
 	@docker compose down
-	@docker compose -f docker-compose.yml up -d
-
-.PHONY: dev-rebuild
-dev-rebuild: dev migrate-reset ## start dev containers with migration-reset
+	@docker compose -f docker-compose.yml up -d --build
 
 .PHONY: log
 log: ## show logs
