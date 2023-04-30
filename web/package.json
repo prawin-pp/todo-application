@@ -7,11 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run src",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/units",
     "test:watch": "vitest",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "test:unit": "vitest",
     "lint": "prettier --plugin-search-dir . --check . && eslint .",
     "format": "prettier --plugin-search-dir . --write ."
   },
