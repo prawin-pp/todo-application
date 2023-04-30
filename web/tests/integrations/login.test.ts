@@ -1,7 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { login } from '../../src/lib/api/auth.api';
 import Login from '../../src/routes/Login.svelte';
+
+vi.mock('../../src/lib/api/auth.api', () => ({ login: vi.fn() }));
 
 describe('Login component', () => {
   describe('login', () => {
