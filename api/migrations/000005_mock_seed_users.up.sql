@@ -27,7 +27,7 @@ INSERT INTO
 VALUES
     (
         'tester03',
-        '$2a$10$KbV7RmxqCM9vR0id6l6pUu5nkmNt/9tda1ZwqGLrmd7UsYBZNEij2'
+        '$2a$10$Es51Gh1FrRM9K24/0zgvYOkHfQ0xbHPIZyC0q.u6Q9h3tn6ueyILu'
     ) ON CONFLICT (username) DO
 UPDATE
 SET
