@@ -1,7 +1,7 @@
 <script lang="ts">
   export let shape: 'filled' | 'outlined' | 'rounded' = 'filled';
 
-  let className: string = '';
+  let className = '';
   export { className as class };
 
   const styles = {
@@ -13,6 +13,6 @@
   $: iconClass = styles[shape] || '';
 </script>
 
-<span class="{className} {iconClass} select-none" on:click>
+<span class="{className} {iconClass} select-none" on:click {...$$restProps}>
   <slot />
 </span>
